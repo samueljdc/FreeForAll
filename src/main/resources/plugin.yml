@@ -1,0 +1,22 @@
+name: FreeForAll
+version: 2.0-Alpha
+main: me.angrypostman.freeforall.FreeForAll
+description: "Free for all, fight in a battle to become the number one"
+author: AngryPostman
+
+commands:
+    stats:
+        description: "View user statistics."
+
+permission:
+    freeforall.*:
+        default: op
+        children:
+            freeforall.command.*: true
+    freeforall.command.*:
+        default: op
+        children:
+            freeforall.command.stats: true
+            freeforall.command.stats.viewOther: true
+    freeforall.command.stats:
+        default: op

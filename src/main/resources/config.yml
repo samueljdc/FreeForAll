@@ -1,0 +1,18 @@
+storage:
+    storageMethod: yaml
+    yaml:
+        dataFile: data.yml
+    mysql:
+        host: localhost
+        database: Minecraft
+        username: username
+        password: password
+        port: 3306
+    sqlite:
+        dataFile: data.sqlite
+
+settings:
+    combat:
+        disablePlayerCollision: true
+messages:
+
