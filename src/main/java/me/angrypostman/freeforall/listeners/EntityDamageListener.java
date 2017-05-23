@@ -15,6 +15,8 @@ import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
+import java.util.Optional;
+
 public class EntityDamageListener implements Listener {
 
     private FreeForAll plugin = null;
@@ -29,24 +31,25 @@ public class EntityDamageListener implements Listener {
 
         if (!(event.getEntity() instanceof Player)) return;
 
-        double finalDamage = event.getFinalDamage();
-
-        if (event.isCancelled() || finalDamage == 0) return;
-
         Player player = (Player) event.getEntity();
-        User user = UserManager.getUser(player);
+        Optional<User> optional = UserManager.getUser(player);
 
-        if (Combat.isInvulnreble(user)) {
-            event.setCancelled(true);
-            return;
+        if (!optional.isPresent()) {
+            player.kickPlayer("Failed to load player data, please relog.");
+            throw new IllegalArgumentException("failed to load player data for '"+player.getName()+"'");
         }
+
+        User user = optional.get();
+
+        double finalDamage = event.getFinalDamage();
+        if (event.isCancelled() || finalDamage == 0) return;
 
         if (event instanceof EntityDamageByEntityEvent) {
 
             EntityDamageByEntityEvent evt = (EntityDamageByEntityEvent) event;
 
             Entity damager = evt.getDamager();
-            User attacker = null;
+            Optional<User> attacker = null;
 
             if (damager instanceof Player) {
                 attacker = UserManager.getUser(damager.getUniqueId());
@@ -62,11 +65,15 @@ public class EntityDamageListener implements Listener {
                         && !tntPrimed.getSource().getUniqueId().equals(player.getUniqueId())) {
                     attacker = UserManager.getUser(tntPrimed.getSource().getUniqueId());
                 }
+            } else if (damager instanceof Tameable) {
+                Tameable tameable = (Tameable) damager;
+                if (tameable.getOwner() != null && tameable.getOwner() instanceof Player) {
+                    attacker = UserManager.getUser(tameable.getOwner().getUniqueId());
+                }
             }
 
-            if (attacker != null) {
-                if (Combat.isInvulnreble(attacker))Combat.setInvulnreble(attacker, false);
-                Damage damage = new Damage(user, attacker, finalDamage);
+            if (attacker != null && attacker.isPresent()) {
+                Damage damage = new Damage(user, attacker.get(), finalDamage);
                 Combat.setLastDamage(user, damage);
             }
 

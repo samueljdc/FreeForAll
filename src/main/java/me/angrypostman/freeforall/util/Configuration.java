@@ -36,15 +36,16 @@ public class Configuration {
         values.put("storage.mysql.port", configuration.getInt("storage.mysql.port"));
         values.put("storage.sqlite.dataFile", configuration.getString("storage.sqlite.dataFile"));
         values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
+        values.put("settings.combat.playerRespawnImmunity", configuration.getInt("settings.combat.playerRespawnImmunity"));
+        values.put("settings.combat.enablePvpLogger", configuration.getBoolean("settings.combat.enablePvpLogger"));
+        values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
         values.put("version", configuration.getDouble("version"));
 
     }
 
     public void save() {
-        for (Map.Entry<String, Object> entry : values.entrySet()) {
-            configuration.set(entry.getKey(), entry.getValue());
-        }
+        values.forEach((entry, value) -> configuration.set(entry, value));
         plugin.saveConfig();
     }
 
@@ -67,6 +68,12 @@ public class Configuration {
     public boolean disablePlayerCollision() {
         return (boolean) values.get("settings.combat.disablePlayerCollision");
     }
+
+    public boolean enablePvpLogger() { return (boolean) values.get("enablePvpLogger"); }
+
+    public long pvpLoggerDuration() { return (long) values.get("pvpLoggerDuration") * 1000L; }
+
+
 
     public double getVersion() {
         return (double) values.get("version");
@@ -102,10 +109,6 @@ public class Configuration {
 
     public File getSQLiteDataFile() {
         return new File(plugin.getDataFolder(), (String) values.get("storage.sqlite.dataFile"));
-    }
-
-    public int getMaxUserCache() {
-        return (int) Runtime.getRuntime().maxMemory() / 1024 / 96;
     }
 
 }

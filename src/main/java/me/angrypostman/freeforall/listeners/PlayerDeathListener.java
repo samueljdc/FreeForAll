@@ -13,6 +13,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 
+import java.util.Optional;
+
 public class PlayerDeathListener implements Listener {
 
     private FreeForAll plugin = null;
@@ -26,7 +28,14 @@ public class PlayerDeathListener implements Listener {
     public void onPlayerDeath(PlayerDeathEvent event) {
 
         Player player = event.getEntity();
-        User user = UserManager.getUser(player);
+        Optional<User> optional = UserManager.getUserIfPresent(player);
+
+        if (!optional.isPresent()) {
+            player.kickPlayer("Failed to load player data, please relog.");
+            throw new IllegalArgumentException("failed to load player data of '"+player.getName()+"'");
+        }
+
+        User user = optional.get();
         User killer = null;
 
         if (Combat.inCombat(user)) {

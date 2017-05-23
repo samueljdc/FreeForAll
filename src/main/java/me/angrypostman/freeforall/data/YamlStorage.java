@@ -12,6 +12,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.UUID;
 
 public class YamlStorage extends DataStorage {
@@ -29,7 +30,7 @@ public class YamlStorage extends DataStorage {
     }
 
     @Override
-    public void initialize() {
+    public boolean initialize() {
 
         configuration = new YamlConfiguration();
 
@@ -38,6 +39,7 @@ public class YamlStorage extends DataStorage {
                 getFile().createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
+                return false;
             }
         }
 
@@ -45,8 +47,10 @@ public class YamlStorage extends DataStorage {
             getConfiguration().load(getFile());
         } catch (InvalidConfigurationException | IOException e) {
             e.printStackTrace();
+            return false;
         }
 
+        return true;
     }
 
     @Override
@@ -55,18 +59,18 @@ public class YamlStorage extends DataStorage {
     }
 
     @Override
-    public User createUser(UUID uuid, String playerName) {
-        return null;
+    public Optional<User> createUser(UUID uuid, String playerName) {
+        return Optional.empty();
     }
 
     @Override
-    public User loadUser(UUID uuid) {
-        return null;
+    public Optional<User> loadUser(UUID uuid) {
+        return Optional.empty();
     }
 
     @Override
-    public User loadUser(String lookupName) {
-        return null;
+    public Optional<User> loadUser(String lookupName) {
+        return Optional.empty();
     }
 
     @Override

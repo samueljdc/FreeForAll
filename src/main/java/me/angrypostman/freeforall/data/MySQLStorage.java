@@ -1,14 +1,16 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
+
 import com.zaxxer.hikari.HikariDataSource;
+
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
-import me.angrypostman.freeforall.util.UUIDFetcher;
 
 import java.sql.*;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -31,9 +33,22 @@ public class MySQLStorage extends DataStorage {
         this.plugin = plugin;
     }
 
-    private void setupTables() {
+    @Override
+    public boolean initialize() {
 
-        plugin.getLogger().info("Setting up MySQL tables...");
+        Preconditions.checkState(dataSource == null || !dataSource.isClosed(), "data source already initialized.");
+
+        plugin.getLogger().info("Initializing database connection pool...");
+
+        dataSource = new HikariDataSource();
+        String jdbcUrl = "jdbc:mysql://"+getHost()+":"+getPort()+"/"+getDatabase();
+        dataSource.setJdbcUrl(jdbcUrl);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        dataSource.setMaximumPoolSize(30);
+        dataSource.setConnectionTimeout(TimeUnit.SECONDS.toMillis(5));
+
+        plugin.getLogger().info("Attempting to connect to "+dataSource.getJdbcUrl()+"@"+dataSource.getUsername()+"...");
 
         Connection connection = null;
         PreparedStatement statement = null;
@@ -41,8 +56,11 @@ public class MySQLStorage extends DataStorage {
             connection = getConnection();
             DatabaseMetaData databaseMeta = connection.getMetaData();
 
-            String table = "ffa_playerData";
+            plugin.getLogger().info("Connection established, validating tables...");
+
+            String table = "ffa_player_data";
             if (!databaseMeta.getTables(null, null, table, null).next()) {
+
                 plugin.getLogger().info("Table `"+table+"` not found, creating it...");
                 String values = "`playerId` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                         "`playerUUID` VARCHAR(36) NOT NULL," +
@@ -60,12 +78,10 @@ public class MySQLStorage extends DataStorage {
                 plugin.getLogger().info("Found table `"+table+"`!");
             }
 
-            if (plugin.getConfiguration().getVersion() < 2.1) {
-
-            }
-
-        } catch (SQLException | IllegalStateException ex) {
-            ex.printStackTrace();
+        } catch (SQLException ex) {
+            plugin.getLogger().info("An error occurred whilst validating MySQL tables.");
+            plugin.getLogger().info("Message: "+ex.getMessage());
+            return false;
         } finally {
 
             if (statement != null) {
@@ -82,28 +98,7 @@ public class MySQLStorage extends DataStorage {
 
         }
 
-    }
-
-    @Override
-    public void initialize() {
-
-        if (dataSource != null && !dataSource.isClosed()) {
-            throw new IllegalArgumentException("DataSource already initialized.");
-        }
-
-        plugin.getLogger().info("Initializing connection pool...");
-
-        dataSource = new HikariDataSource();
-
-        String jdbcUrl = "jdbc:mysql://"+getHost()+":"+getPort()+"/"+getDatabase();
-        dataSource.setJdbcUrl(jdbcUrl);
-        dataSource.setUsername(username);
-        dataSource.setPassword(password);
-        dataSource.setMaximumPoolSize(30);
-        dataSource.setConnectionTimeout(TimeUnit.SECONDS.toMillis(5));
-
-        setupTables();
-
+        return true;
     }
 
     @Override
@@ -122,17 +117,19 @@ public class MySQLStorage extends DataStorage {
     }
 
     @Override
-    public User createUser(UUID playerUUID, String playerName) {
+    public Optional<User> createUser(UUID playerUUID, String playerName) {
+
+        Preconditions.checkNotNull(playerUUID, "uuid cannot be null");
+        Preconditions.checkArgument(playerName != null && !playerName.isEmpty(), "player name cannot be null or effectively null");
 
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet set = null;
-
         try {
 
             connection = getConnection();
 
-            String query = "INSERT INTO `ffa_playerData`(`playerUUID`, `playerName`, `lookupName`) VALUES(?, ?);";
+            String query = "INSERT INTO `ffa_player_data`(`playerUUID`, `playerName`, `lookupName`) VALUES(?, ?, ?);";
 
             statement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, playerUUID.toString());
@@ -143,11 +140,12 @@ public class MySQLStorage extends DataStorage {
 
             set = statement.getGeneratedKeys();
 
-            if (!set.next()) throw new IllegalStateException("Failed to retrieve generated keys");
+            if (!set.next()) throw new SQLException("failed to retrieve generated keys");
 
-            return new User(set.getInt(1), playerUUID, playerName);
+            return Optional.of(new User(set.getInt(1), playerUUID, playerName)); //defaults for everything else
         } catch (SQLException | IllegalStateException ex) {
-            ex.printStackTrace();
+            plugin.getLogger().info("An error occurred whilst attempting to create database record for '"+playerName+"'");
+            plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
 
             if (set != null) {
@@ -170,26 +168,26 @@ public class MySQLStorage extends DataStorage {
 
         }
 
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public User loadUser(UUID uuid) {
+    public Optional<User> loadUser(UUID uuid) {
 
-        Preconditions.checkNotNull(uuid, "uuid");
+        Preconditions.checkNotNull(uuid, "uuid cannot be null");
 
-        User tempUser = UserManager.getUser(uuid);
-        if (tempUser != null) return tempUser;
+        //If user is in cache, refer to the cache for the data instead as the data should never be different
+        Optional<User> tempUser = UserManager.getUserIfPresent(uuid);
+        if (tempUser.isPresent()) return tempUser;
 
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet set = null;
-
         try {
 
             connection = getConnection();
 
-            String query = "SELECT * FROM `ffa_playerData` WHERE `uuid`=? LIMIT 1;";
+            String query = "SELECT * FROM `ffa_player_data` WHERE `uuid`=? LIMIT 1;";
 
             statement = connection.prepareStatement(query);
             statement.setString(1, uuid.toString());
@@ -203,11 +201,12 @@ public class MySQLStorage extends DataStorage {
                 int kills = set.getInt("kills");
                 int deaths = set.getInt("deaths");
 
-                return new User(playerId, uuid, playerName, points, kills, deaths);
+                return Optional.of(new User(playerId, uuid, playerName, points, kills, deaths));
             }
 
         } catch (SQLException | IllegalStateException ex) {
-            ex.printStackTrace();
+            plugin.getLogger().info("An error occurred whilst loading user data for '"+uuid+"'");
+            plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
 
             if (set != null) {
@@ -230,27 +229,26 @@ public class MySQLStorage extends DataStorage {
 
         }
 
-        return null;
+        return Optional.empty();
     }
 
     @Override
-    public User loadUser(String lookupName) {
+    public Optional<User> loadUser(String lookupName) {
 
-        Preconditions.checkNotNull(lookupName, "lookupName");
-        Preconditions.checkArgument(!lookupName.isEmpty(), "lookupName empty");
+        Preconditions.checkArgument(lookupName != null && !lookupName.isEmpty(), "lookupName cannot be null or effectively null");
 
-        User tempUser = UserManager.getUser(lookupName);
-        if (tempUser != null) return tempUser;
+        //If user is in cache, refer to the cache for the data instead as the data should never be different
+        Optional<User> tempUser = UserManager.getUser(lookupName);
+        if (tempUser.isPresent()) return tempUser;
 
         Connection connection = null;
         PreparedStatement statement = null;
         ResultSet set = null;
-
         try {
 
             connection = getConnection();
 
-            String query = "SELECT * FROM `ffa_playerData` WHERE `lookupName`=? LIMIT 1;";
+            String query = "SELECT * FROM `ffa_player_data` WHERE `lookupName`=? LIMIT 1;";
 
             statement = connection.prepareStatement(query);
             statement.setString(1, lookupName.toLowerCase());
@@ -265,11 +263,12 @@ public class MySQLStorage extends DataStorage {
                 int kills = set.getInt("kills");
                 int deaths = set.getInt("deaths");
 
-                return new User(playerId, playerUUID, playerName, points, kills, deaths);
+                return Optional.of(new User(playerId, playerUUID, playerName, points, kills, deaths));
             }
 
         } catch (SQLException | IllegalStateException ex) {
-            ex.printStackTrace();
+            plugin.getLogger().info("An error occurred whilst loading user data for '"+lookupName+"'");
+            plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
 
             if (set != null) {
@@ -292,22 +291,21 @@ public class MySQLStorage extends DataStorage {
 
         }
 
-        return null;
+        return Optional.empty();
     }
 
     @Override
     public void saveUser(User user) {
 
-        Preconditions.checkNotNull(user, "user");
+        Preconditions.checkNotNull(user, "user cannot be null");
 
         Connection connection = null;
         PreparedStatement statement = null;
-
         try {
 
             connection = getConnection();
 
-            String query = "UPDATE `ffa_playerData` SET `playerName`=?, `lookupName`=?, " +
+            String query = "UPDATE `ffa_player_data` SET `playerName`=?, `lookupName`=?, " +
                     "`points`=?, `kills`=?," +
                     "`deaths`=? WHERE `playerUUID`=?;";
 
@@ -321,7 +319,8 @@ public class MySQLStorage extends DataStorage {
 
             statement.executeUpdate();
         } catch (SQLException | IllegalStateException ex) {
-            ex.printStackTrace();
+            plugin.getLogger().info("An error occurred whilst saving user data for '"+user.getName()+"'");
+            plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
 
             if (statement != null) {
@@ -340,30 +339,28 @@ public class MySQLStorage extends DataStorage {
 
     }
 
-    public Connection getConnection() throws SQLException {
-        if (dataSource == null || dataSource.isClosed()) {
-            throw new IllegalStateException("DataSource must be initialized first.");
-        }
+    private Connection getConnection() throws SQLException {
+        Preconditions.checkArgument(dataSource != null && !dataSource.isClosed(), "data source must be initialized first");
         return dataSource.getConnection();
     }
 
-    public String getHost() {
+    private String getHost() {
         return host;
     }
 
-    public int getPort() {
+    private int getPort() {
         return port;
     }
 
-    public String getDatabase() {
+    private String getDatabase() {
         return database;
     }
 
-    public String getUsername() {
+    private String getUsername() {
         return username;
     }
 
-    public String getPassword() {
+    private String getPassword() {
         return password;
     }
 }

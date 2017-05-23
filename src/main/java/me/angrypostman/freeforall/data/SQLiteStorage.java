@@ -4,6 +4,7 @@ import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.UUID;
 
 public class SQLiteStorage extends DataStorage {
@@ -17,8 +18,8 @@ public class SQLiteStorage extends DataStorage {
     }
 
     @Override
-    public void initialize() {
-
+    public boolean initialize() {
+        return false;
     }
 
     @Override
@@ -27,17 +28,17 @@ public class SQLiteStorage extends DataStorage {
     }
 
     @Override
-    public User createUser(UUID uuid, String playerName) {
+    public Optional<User> createUser(UUID uuid, String playerName) {
         return null;
     }
 
     @Override
-    public User loadUser(UUID uuid) {
+    public Optional<User> loadUser(UUID uuid) {
         return null;
     }
 
     @Override
-    public User loadUser(String lookupName) {
+    public Optional<User> loadUser(String lookupName) {
         return null;
     }
 

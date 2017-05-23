@@ -13,6 +13,8 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import java.util.Optional;
+
 public class PlayerQuitListener implements Listener {
 
     private FreeForAll plugin = null;
@@ -26,10 +28,17 @@ public class PlayerQuitListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
 
         Player player = event.getPlayer();
-        User user = UserManager.getUser(player);
+        Optional<User> optional = UserManager.getUserIfPresent(player);
+
+        if (!optional.isPresent()) {
+            throw new IllegalArgumentException("no player data found for '"+player.getName()+"'");
+        }
+
+        User user = optional.get();
 
         if (user.hasKillStreak()) {
-            
+
+
 
         }
 

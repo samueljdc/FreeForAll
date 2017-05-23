@@ -11,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerLoginListener implements Listener {
@@ -30,10 +31,18 @@ public class PlayerLoginListener implements Listener {
         String playerName = event.getName();
         UUID playerUUID = event.getUniqueId();
 
-        User user = storage.loadUser(playerUUID);
-        if (user == null) {
-            user = storage.createUser(playerUUID, playerName);
-        } else if (!user.getName().equals(playerName)) {
+        Optional<User> optional = storage.loadUser(playerUUID);
+        if (!optional.isPresent()) {
+            optional = storage.createUser(playerUUID, playerName);
+            if (!optional.isPresent()) {
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to generate player data, please relog");
+                throw new IllegalArgumentException("failed to generate player data");
+            }
+        }
+
+        User user = optional.get();
+
+        if (!user.getName().equals(playerName)) {
             user.setName(playerName);
             storage.saveUser(user);
         }

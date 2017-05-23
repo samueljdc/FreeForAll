@@ -19,6 +19,7 @@ public class User {
     private int killStreak = 0;
 
     private long downloadTime = 0L;
+    private long lastQueried = 0L; //this might be used, i dont know
 
     public User(int playerId, UUID playerUUID, String name) {
         this(playerId, playerUUID, name, 0, 0, 0);
@@ -32,6 +33,7 @@ public class User {
         this.kills = kills;
         this.deaths = deaths;
         this.downloadTime = System.currentTimeMillis();
+        this.lastQueried = System.currentTimeMillis();
     }
 
     public int getPlayerId() {
@@ -67,10 +69,10 @@ public class User {
         this.points += points;
     }
 
-    public void subtractPoints(int points) {
-        Preconditions.checkArgument(points > 0, "points to subtract must be greater than 0");
-        Preconditions.checkArgument(this.points - points >= 0, "cannot reduce a players points below 0");
-        this.points -= points;
+    public void subtractPoints(int subtract) {
+        Preconditions.checkArgument(subtract > 0, "points to subtract must be greater than 0");
+        Preconditions.checkArgument(points - subtract >= 0, "cannot reduce a players points below 0");
+        this.points -= subtract;
     }
 
     public int getKills() {
@@ -106,4 +108,7 @@ public class User {
         return downloadTime;
     }
 
+    public long getLastQueried() {
+        return lastQueried;
+    }
 }

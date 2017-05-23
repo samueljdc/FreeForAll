@@ -1,32 +1,32 @@
 package me.angrypostman.freeforall;
 
 import com.google.common.base.Charsets;
-import me.angrypostman.freeforall.commands.KitCommand;
-import me.angrypostman.freeforall.commands.SaveKitCommand;
-import me.angrypostman.freeforall.commands.StatsCommand;
+import me.angrypostman.freeforall.commands.*;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.data.MySQLStorage;
 import me.angrypostman.freeforall.data.SQLiteStorage;
 import me.angrypostman.freeforall.data.YamlStorage;
-import me.angrypostman.freeforall.listeners.EntityDamageListener;
-import me.angrypostman.freeforall.listeners.PlayerDeathListener;
-import me.angrypostman.freeforall.listeners.PlayerLoginListener;
-import me.angrypostman.freeforall.listeners.PlayerQuitListener;
+import me.angrypostman.freeforall.listeners.*;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
 import me.angrypostman.freeforall.util.Configuration;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
+import org.bukkit.permissions.ServerOperator;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class FreeForAll extends JavaPlugin {
@@ -76,9 +76,11 @@ public class FreeForAll extends JavaPlugin {
         plugin = this;
 
         if (!new File(getDataFolder(), "config.yml").exists()) {
+            getLogger().info("Failed to find configuration, saving default config...");
             saveDefaultConfig();
         }
 
+        getLogger().info("Validating configuration file...");
         try {
             YamlConfiguration config = new YamlConfiguration();
             config.load(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8));
@@ -96,54 +98,93 @@ public class FreeForAll extends JavaPlugin {
             File file = configuration.getYAMLDataFile();
             dataStorage = new YamlStorage(this, file);
         } else if (storageMethod.equalsIgnoreCase("MYSQL")) {
-            dataStorage = new MySQLStorage(this, configuration.getSQLHost(),
-                    configuration.getSQLDatabase(),
-                    configuration.getSQLUser(),
-                    configuration.getSQLPassword(),
-                    configuration.getSQLPort());
+            String host = configuration.getSQLHost();
+            String database = configuration.getSQLDatabase();
+            String username = configuration.getSQLUser();
+            String password = configuration.getSQLPassword();
+            Integer port = configuration.getSQLPort();
+            dataStorage = new MySQLStorage(this, host, database, username, password, port);
         } else if (storageMethod.equalsIgnoreCase("SQLITE")) {
             File file = configuration.getSQLiteDataFile();
             dataStorage = new SQLiteStorage(this, file);
         } else {
             getLogger().info("Unknown storage method \"" + storageMethod + "\".");
-            getLogger().info("Valid storage methods: YAML (YML), MYSQL, SQLITE");
+            getLogger().info("Valid storage methods include: YAML (or YML), MYSQL, SQLITE");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
         getLogger().info("Initializing data storage with storage method \"" + storageMethod.toUpperCase() + "\"...");
-        dataStorage.initialize();
+        if(!dataStorage.initialize()) {
+            String message = "Failed to initialize data storage, please check the logs for further details.";
+            this.getLogger().info(message);
+            Bukkit.getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] "+message));
+            getPluginLoader().disablePlugin(this);
+            return;
+        }
 
         PluginManager manager = getServer().getPluginManager();
         manager.registerEvents(new EntityDamageListener(this), this);
         manager.registerEvents(new PlayerDeathListener(this), this);
         manager.registerEvents(new PlayerLoginListener(this), this);
+        manager.registerEvents(new PlayerJoinListener(this), this);
         manager.registerEvents(new PlayerQuitListener(this), this);
 
         getCommand("stats").setExecutor(new StatsCommand(this));
         getCommand("kit").setExecutor(new KitCommand(this));
         getCommand("savekit").setExecutor(new SaveKitCommand(this));
+        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
+        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
 
-        Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
-        if (onlinePlayers.size() > 0) {
+        int online = Bukkit.getOnlinePlayers().size();
+        if (online > 0) {
             getLogger().info("Server reload detected, please refrain from doing this in the future as this can " +
                     "massively impair server performance.");
-            getLogger().info("Attempting to load user data of " + onlinePlayers.size() + " players...");
+            getLogger().info("Attempting to load user data of " + online + " players, this may take a while...");
 
-            for (Player player : onlinePlayers) {
+            for (Player player : Bukkit.getOnlinePlayers()) {
                 UUID playerUUID = player.getUniqueId();
-                User user = dataStorage.loadUser(playerUUID);
+                Optional<User> optional = dataStorage.loadUser(playerUUID);
 
-                if (user == null) {
-                    user = dataStorage.createUser(playerUUID, player.getName());
-                } else if (!user.getName().equals(player.getName())) {
+                if (!optional.isPresent()) {
+                    optional = dataStorage.createUser(playerUUID, player.getName());
+                    if (!optional.isPresent()) {
+                        throw new IllegalArgumentException("Failed to generate player data");
+                    }
+                }
+
+                User user = optional.get();
+
+                if (!user.getName().equals(player.getName())) {
                     user.setName(player.getName());
-                    dataStorage.saveUser(user);
                 }
 
                 UserManager.getUsers().add(user);
             }
         }
+
+        doSyncRepeating(() -> {
+
+            //Cleanup unused data
+            Iterator<User> iterator = UserManager.getUsers().iterator();
+            while (iterator.hasNext()) {
+
+                User user = iterator.next();
+
+                Player player = user.getBukkitPlayer();
+                long downloadTime = user.getDownloadTime();
+
+                if (player == null || !player.isOnline()) {
+                    if (System.currentTimeMillis() - downloadTime >= TimeUnit.MINUTES.toMillis(10)) {
+                        iterator.remove();
+                    }
+                }
+
+            }
+
+            //Execute this task every 10 minutes
+            //startAfterTicks = 60 * 10 * 20 (10 minutes), repeatDelayTicks = 60 * 10 * 20 (10 minutes)
+        }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
 
     }
 

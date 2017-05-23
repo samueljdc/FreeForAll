@@ -11,6 +11,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.util.Optional;
+
 import static me.angrypostman.freeforall.FreeForAll.doAsync;
 import static me.angrypostman.freeforall.FreeForAll.doSync;
 
@@ -42,15 +44,13 @@ public class StatsCommand implements CommandExecutor {
                 doAsync(() -> {
 
                     String lookupName = args[0].toLowerCase();
-                    User tempUser = UserManager.getUser(lookupName);
-                    if (tempUser == null) tempUser = storage.loadUser(lookupName);
-
-                    if (tempUser == null) {
+                    Optional<User> tempUser = UserManager.getUser(lookupName);
+                    if (!tempUser.isPresent()) {
                         player.sendMessage(ChatColor.RED + "Failed to find " + lookupName + " in database records.");
                         return;
                     }
 
-                    final User target = tempUser;
+                    final User target = tempUser.get();
 
                     doSync(()->{
                         player.sendMessage(ChatColor.GOLD + "FFA >> " + target.getName() + "'s stats");
@@ -66,15 +66,13 @@ public class StatsCommand implements CommandExecutor {
 
                 doAsync(() -> {
 
-                    User tempUser = UserManager.getUser(player.getUniqueId());
-                    if (tempUser == null) tempUser = storage.loadUser(player.getUniqueId());
-
-                    if (tempUser == null) {
+                    Optional<User> tempUser = UserManager.getUser(player.getUniqueId());
+                    if (!tempUser.isPresent()) {
                         player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog.");
                         return;
                     }
 
-                    final User user = tempUser;
+                    final User user = tempUser.get();
 
                     doSync(()->{
                         player.sendMessage(ChatColor.GOLD + "FFA >> " + user.getName() + "'s stats");

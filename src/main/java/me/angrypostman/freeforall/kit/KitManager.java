@@ -7,7 +7,11 @@ import me.angrypostman.freeforall.user.User;
 
 import me.angrypostman.freeforall.util.Configuration;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import java.util.*;
@@ -19,27 +23,20 @@ public class KitManager {
     private static List<FFAKit> kits = new ArrayList<>();
     private static Map<UUID, FFAKit> playerKits = new HashMap<>();
 
-    public static FFAKit getKitOf(Player player) {
+    public static Optional<FFAKit> getKitOf(Player player) {
         Preconditions.checkNotNull(player, "player");
         Preconditions.checkArgument(player.isOnline(), "player not online");
-        for (Map.Entry<UUID, FFAKit> entry : playerKits.entrySet()) {
-            if (entry.getKey().equals(player.getUniqueId())) {
-                return entry.getValue();
-            }
-        }
-        return null;
+        return playerKits.entrySet().stream()
+                .filter(entry -> entry.getKey().equals(player.getUniqueId()))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 
-    public static FFAKit getKit(String name) {
-        for (FFAKit kit : getKits()) {
-            if (kit.getName().equalsIgnoreCase(name)) {
-                return kit;
-            }
-        }
-        return null;
+    public static Optional<FFAKit> getKit(String name) {
+        return kits.stream().filter(kit -> kit.getName().equalsIgnoreCase(name)).findFirst();
     }
 
-    public static FFAKit getDefaultKit() {
+    public static Optional<FFAKit> getDefaultKit() {
         return getKit(config.getDefaultKit());
     }
 
@@ -76,7 +73,51 @@ public class KitManager {
 
     }
 
-    public static List<FFAKit> getKits() {
-        return kits;
+    public static void registerKit(FFAKit kit) {
+        Preconditions.checkNotNull(kit, "kit");
+        Preconditions.checkArgument(getKit(kit.getName())==null, "kit already defined");
+        kits.add(kit);
     }
+
+    public static void saveKit(FFAKit kit) {
+
+        Preconditions.checkNotNull(kit, "kit");
+
+        FileConfiguration config = FreeForAll.getPlugin().getConfig();
+        ConfigurationSection section = config.getConfigurationSection("kits");
+        if (section == null) section = config.createSection("kits");
+
+        String lowerCase = kit.getName().toLowerCase();
+
+        config.set("kits."+lowerCase+".friendly", kit.getName());
+
+        if (kit.getHelmet() != null) config.set("kits."+lowerCase+".helmet", kit.getHelmet().getType().name());
+        if (kit.getChestplate() != null) config.set("kits."+lowerCase+".chestplate", kit.getChestplate().getType().name());
+        if (kit.getLeggings() != null) config.set("kits."+lowerCase+".leggings", kit.getLeggings().getType().name());
+        if (kit.getBoots() != null) config.set("kits."+lowerCase+".boots", kit.getBoots().getType().name());
+
+        List<String> serialized = new ArrayList<>();
+        for (ItemStack stack : kit.getInventoryItems()) {
+            if (stack == null || stack.getType()== Material.AIR) continue;
+
+            Material material = stack.getType();
+            String name = material.name();
+
+            Byte data = stack.getData().getData();
+            Integer amount = stack.getAmount();
+
+            String newStack = name+","+data+","+amount;
+            serialized.add(newStack);
+
+        }
+
+        config.set("kits."+lowerCase+".contents", serialized);
+        FreeForAll.getPlugin().saveConfig();
+
+    }
+
+    public static List<FFAKit> getKits() {
+        return new ArrayList<>(kits);
+    }
+
 }
