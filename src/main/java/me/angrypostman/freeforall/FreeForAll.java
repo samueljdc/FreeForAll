@@ -31,6 +31,25 @@ import java.util.logging.Level;
 
 public class FreeForAll extends JavaPlugin {
 
+    /*
+         1. Data Storage > SQLite and YML data storage implementation
+         2. Commands > Set spawn (multiple) (use data storage or local yml?)
+         3. Commands > Del spawn
+         4. EntityDamageListener > Spawned creatures that attack a player still trigger the combat tag
+         5. PlayerDeathListener > Reward killer (increment points, kills, killStreak, anything else?), subtract
+         points from the killed user, end kill streak, anything else?
+         6. PlayerJoinListener > Not sure yet
+         7. PlayerQuitListener > Calculate lost points, other stuff
+         8. PlayerMoveListener > Not sure yet (boundaries for the arena ?)
+         9. Implement stats (arrows shot, neutral monsters killed, etc) at some point, probably
+         after initial release
+         10. Kits > Load kits,
+         11. Optional chat formatting at some point (after release)
+         12. Implement player ranking
+         13. Commands > Reset stats
+         14. Commands > Leaderboard (/leaderboard [page] (aliases: /top))
+     */
+
     private static FreeForAll plugin = null;
 
     private DataStorage dataStorage = null;

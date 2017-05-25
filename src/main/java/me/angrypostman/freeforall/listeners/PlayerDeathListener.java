@@ -2,12 +2,10 @@ package me.angrypostman.freeforall.listeners;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
-import me.angrypostman.freeforall.user.Combat;
-import me.angrypostman.freeforall.user.Damage;
-import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserManager;
+import me.angrypostman.freeforall.user.*;
 
 import me.angrypostman.freeforall.util.PlayerUtils;
+import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -30,9 +28,9 @@ public class PlayerDeathListener implements Listener {
         Player player = event.getEntity();
         Optional<User> optional = UserManager.getUserIfPresent(player);
 
-        if (!optional.isPresent()) {
-            player.kickPlayer("Failed to load player data, please relog.");
-            throw new IllegalArgumentException("failed to load player data of '"+player.getName()+"'");
+        if (!optional.isPresent()) { //This should NEVER happen
+            player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog");
+            throw new IllegalArgumentException("failed to load player data of '"+player.getName()+"'.");
         }
 
         User user = optional.get();
@@ -47,8 +45,10 @@ public class PlayerDeathListener implements Listener {
 
         }
 
-        user.addDeath();
-        user.endStreak();
+        UserData userData = user.getUserData();
+
+        userData.addDeath();
+        userData.endStreak();
 
         PlayerUtils.forceRespawn(user, null);
 

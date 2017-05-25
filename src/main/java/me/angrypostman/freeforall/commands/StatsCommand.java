@@ -3,6 +3,7 @@ package me.angrypostman.freeforall.commands;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
+import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
 
 import org.bukkit.ChatColor;
@@ -51,13 +52,14 @@ public class StatsCommand implements CommandExecutor {
                     }
 
                     final User target = tempUser.get();
+                    final UserData userData = target.getUserData();
 
                     doSync(()->{
                         player.sendMessage(ChatColor.GOLD + "FFA >> " + target.getName() + "'s stats");
                         player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + target.getPoints());
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + target.getKills());
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + target.getDeaths());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
                     });
 
                 });
@@ -73,13 +75,14 @@ public class StatsCommand implements CommandExecutor {
                     }
 
                     final User user = tempUser.get();
+                    final UserData userData = user.getUserData();
 
                     doSync(()->{
                         player.sendMessage(ChatColor.GOLD + "FFA >> " + user.getName() + "'s stats");
                         player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + user.getPoints());
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + user.getKills());
-                        player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + user.getDeaths());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
+                        player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
                     });
 
                 });

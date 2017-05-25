@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
+import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
 
 import java.sql.*;
@@ -143,7 +144,7 @@ public class MySQLStorage extends DataStorage {
             if (!set.next()) throw new SQLException("failed to retrieve generated keys");
 
             return Optional.of(new User(set.getInt(1), playerUUID, playerName)); //defaults for everything else
-        } catch (SQLException | IllegalStateException ex) {
+        } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst attempting to create database record for '"+playerName+"'");
             plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
@@ -204,7 +205,7 @@ public class MySQLStorage extends DataStorage {
                 return Optional.of(new User(playerId, uuid, playerName, points, kills, deaths));
             }
 
-        } catch (SQLException | IllegalStateException ex) {
+        } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst loading user data for '"+uuid+"'");
             plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
@@ -266,7 +267,7 @@ public class MySQLStorage extends DataStorage {
                 return Optional.of(new User(playerId, playerUUID, playerName, points, kills, deaths));
             }
 
-        } catch (SQLException | IllegalStateException ex) {
+        } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst loading user data for '"+lookupName+"'");
             plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {
@@ -309,16 +310,18 @@ public class MySQLStorage extends DataStorage {
                     "`points`=?, `kills`=?," +
                     "`deaths`=? WHERE `playerUUID`=?;";
 
+            UserData data = user.getUserData();
+
             statement = connection.prepareStatement(query);
             statement.setString(1, user.getName());
             statement.setString(2, user.getLookupName());
-            statement.setInt(3, user.getPoints());
-            statement.setInt(4, user.getKills());
-            statement.setInt(5, user.getDeaths());
+            statement.setInt(3, data.getPoints());
+            statement.setInt(4, data.getKills());
+            statement.setInt(5, data.getDeaths());
             statement.setString(6, user.getPlayerUUID().toString());
 
             statement.executeUpdate();
-        } catch (SQLException | IllegalStateException ex) {
+        } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst saving user data for '"+user.getName()+"'");
             plugin.getLogger().info("Message: "+ex.getMessage());
         } finally {

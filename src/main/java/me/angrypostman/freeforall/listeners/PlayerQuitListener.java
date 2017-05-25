@@ -2,10 +2,7 @@ package me.angrypostman.freeforall.listeners;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
-import me.angrypostman.freeforall.user.Combat;
-import me.angrypostman.freeforall.user.Damage;
-import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserManager;
+import me.angrypostman.freeforall.user.*;
 
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -14,6 +11,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.Optional;
+
+import static me.angrypostman.freeforall.FreeForAll.doAsync;
 
 public class PlayerQuitListener implements Listener {
 
@@ -35,31 +34,27 @@ public class PlayerQuitListener implements Listener {
         }
 
         User user = optional.get();
-
-        if (user.hasKillStreak()) {
-
-
-
-        }
+        UserData userData = user.getUserData();
 
         if (Combat.inCombat(user)) {
 
             Damage damage = Combat.getLastDamage(user);
             User attacker = damage.getDamager();
+            UserData attackerData = attacker.getUserData();
 
             int playerLost = 50;
 
-            attacker.addPoints(playerLost);
-            attacker.addKill();
+            attackerData.addPoints(playerLost);
+            attackerData.addKill();
 
-            user.subtractPoints(playerLost);
-            user.addDeath();
-            user.endStreak();
+            userData.subtractPoints(playerLost);
+            userData.addDeath();
+            userData.endStreak();
             Combat.setLastDamage(user, null);
 
         }
 
-        storage.saveUser(user);
+        doAsync(() -> storage.saveUser(user));
         UserManager.getUsers().remove(user);
 
     }
