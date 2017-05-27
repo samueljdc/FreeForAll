@@ -1,6 +1,7 @@
 package me.angrypostman.freeforall.util;
 
 import me.angrypostman.freeforall.FreeForAll;
+import org.bukkit.WeatherType;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -37,7 +38,7 @@ public class Configuration {
         values.put("storage.sqlite.dataFile", configuration.getString("storage.sqlite.dataFile"));
         values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
         values.put("settings.combat.playerRespawnImmunity", configuration.getInt("settings.combat.playerRespawnImmunity"));
-        values.put("settings.combat.enablePvpLogger", configuration.getBoolean("settings.combat.enablePvpLogger"));
+        values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
         values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
         values.put("version", configuration.getDouble("version"));
@@ -69,11 +70,17 @@ public class Configuration {
         return (boolean) values.get("settings.combat.disablePlayerCollision");
     }
 
-    public boolean enablePvpLogger() { return (boolean) values.get("enablePvpLogger"); }
+    public boolean enablePvpLogger() { return (boolean) values.get("settings.combat.pvpLogger"); }
 
-    public long pvpLoggerDuration() { return (long) values.get("pvpLoggerDuration") * 1000L; }
+    public long pvpLoggerDuration() { return (long) values.get("settings.combat.pvpLoggerDuration") * 1000L; }
 
+    public boolean disableWeather() { return (boolean) values.get("settings.world.disableWeather"); }
 
+    public boolean disablePlayerDrop() { return (boolean) values.get("settings.world.disablePlayerDrop"); }
+
+    public boolean disablePlayerPickup() { return (boolean) values.get("settings.world.disablePlayerPickup"); }
+
+    public boolean disableCreatures() { return (boolean) values.get("settings.world.disableCreatures"); }
 
     public double getVersion() {
         return (double) values.get("version");

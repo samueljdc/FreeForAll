@@ -36,7 +36,7 @@ public class PlayerLoginListener implements Listener {
             optional = storage.createUser(playerUUID, playerName);
             if (!optional.isPresent()) {
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to generate player data, please relog");
-                throw new IllegalArgumentException("failed to generate player data");
+                return;
             }
         }
 

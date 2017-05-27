@@ -19,7 +19,7 @@ public class SQLiteStorage extends DataStorage {
 
     @Override
     public boolean initialize() {
-        return false;
+        return true;
     }
 
     @Override

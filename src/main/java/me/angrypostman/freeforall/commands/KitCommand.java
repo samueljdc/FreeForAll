@@ -27,6 +27,10 @@ public class KitCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
 
+        if (!command.getName().equalsIgnoreCase("kit")) {
+            return false;
+        }
+
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage("You must be a player to perform this command.");
             return true;
@@ -38,14 +42,14 @@ public class KitCommand implements CommandExecutor {
         }
 
         Player player = (Player) commandSender;
-        Optional<User> optional = UserManager.getUser(player);
+        Optional<User> userOptional = UserManager.getUser(player);
 
-        if (!optional.isPresent()) {
+        if (!userOptional.isPresent()) {
             player.sendMessage(ChatColor.RED+"Failed to load player data, please relog");
             return false;
         }
 
-        User user = optional.get();
+        User user = userOptional.get();
 
         if (args.length < 1) {
             player.sendMessage(ChatColor.RED+"Correct usage: /kit <name>");
@@ -53,14 +57,14 @@ public class KitCommand implements CommandExecutor {
         }
 
         String kitName = args[0].toLowerCase();
-        Optional<FFAKit> opt = KitManager.getKit(kitName);
+        Optional<FFAKit> kitOptional = KitManager.getKit(kitName);
 
-        if (!opt.isPresent()) {
+        if (!kitOptional.isPresent()) {
             player.sendMessage(ChatColor.RED+"Unknown kit '"+kitName+"'");
             return false;
         }
 
-        FFAKit kit = opt.get();
+        FFAKit kit = kitOptional.get();
 
         if (kit.hasPermission() && !player.hasPermission(kit.getPermission())) {
             player.sendMessage(ChatColor.RED+"You don't have permission for that kit.");

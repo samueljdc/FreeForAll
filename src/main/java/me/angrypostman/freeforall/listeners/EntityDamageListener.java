@@ -6,6 +6,7 @@ import me.angrypostman.freeforall.user.Combat;
 import me.angrypostman.freeforall.user.Damage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -32,12 +33,9 @@ public class EntityDamageListener implements Listener {
         if (!(event.getEntity() instanceof Player)) return;
 
         Player player = (Player) event.getEntity();
-        Optional<User> optional = UserManager.getUser(player);
+        Optional<User> optional = UserManager.getUserIfPresent(player);
 
-        if (!optional.isPresent()) {
-            player.kickPlayer("Failed to load player data, please relog.");
-            throw new IllegalArgumentException("failed to load player data for '"+player.getName()+"'");
-        }
+        if (!optional.isPresent()) return;
 
         User user = optional.get();
 
@@ -52,29 +50,35 @@ public class EntityDamageListener implements Listener {
             Optional<User> attacker = null;
 
             if (damager instanceof Player) {
-                attacker = UserManager.getUser(damager.getUniqueId());
+                attacker = UserManager.getUserIfPresent(damager.getUniqueId());
             } else if (damager instanceof Projectile) {
                 Projectile projectile = (Projectile) damager;
                 if (projectile.getShooter() instanceof Player) {
-                    attacker = UserManager.getUser(((Player) projectile.getShooter()).getUniqueId());
+                    attacker = UserManager.getUserIfPresent(((Player) projectile.getShooter()).getUniqueId());
                 }
             } else if (damager instanceof TNTPrimed) {
                 TNTPrimed tntPrimed = (TNTPrimed) damager;
                 if (tntPrimed.getSource() != null
                         && tntPrimed.getSource() instanceof Player
                         && !tntPrimed.getSource().getUniqueId().equals(player.getUniqueId())) {
-                    attacker = UserManager.getUser(tntPrimed.getSource().getUniqueId());
+                    attacker = UserManager.getUserIfPresent(tntPrimed.getSource().getUniqueId());
                 }
             } else if (damager instanceof Tameable) {
                 Tameable tameable = (Tameable) damager;
                 if (tameable.getOwner() != null && tameable.getOwner() instanceof Player) {
-                    attacker = UserManager.getUser(tameable.getOwner().getUniqueId());
+                    attacker = UserManager.getUserIfPresent(tameable.getOwner().getUniqueId());
                 }
             }
 
-            if (attacker != null && attacker.isPresent()) {
-                Damage damage = new Damage(user, attacker.get(), finalDamage);
-                Combat.setLastDamage(user, damage);
+            if (attacker != null) {
+
+                if (attacker.isPresent()) {
+                    Damage damage = new Damage(user, attacker.get(), finalDamage);
+                    Combat.setLastDamage(user, damage);
+                } else {
+                    event.setCancelled(true);
+                }
+
             }
 
         }

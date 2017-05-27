@@ -29,9 +29,7 @@ public class PlayerQuitListener implements Listener {
         Player player = event.getPlayer();
         Optional<User> optional = UserManager.getUserIfPresent(player);
 
-        if (!optional.isPresent()) {
-            throw new IllegalArgumentException("no player data found for '"+player.getName()+"'");
-        }
+        if (!optional.isPresent()) return;
 
         User user = optional.get();
         UserData userData = user.getUserData();

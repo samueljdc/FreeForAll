@@ -136,7 +136,6 @@ public class FreeForAll extends JavaPlugin {
         getLogger().info("Initializing data storage with storage method \"" + storageMethod.toUpperCase() + "\"...");
         if(!dataStorage.initialize()) {
             String message = "Failed to initialize data storage, please check the logs for further details.";
-            this.getLogger().info(message);
             Bukkit.getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] "+message));
             getPluginLoader().disablePlugin(this);
             return;
@@ -148,12 +147,15 @@ public class FreeForAll extends JavaPlugin {
         manager.registerEvents(new PlayerLoginListener(this), this);
         manager.registerEvents(new PlayerJoinListener(this), this);
         manager.registerEvents(new PlayerQuitListener(this), this);
+        manager.registerEvents(new GeneralListeners(this), this);
 
+        //Might convert to using custom command handler at some point,
         getCommand("stats").setExecutor(new StatsCommand(this));
+        getCommand("resetstats").setExecutor(new ResetStatsCommand(this));
         getCommand("kit").setExecutor(new KitCommand(this));
         getCommand("savekit").setExecutor(new SaveKitCommand(this));
-        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
-        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
+//        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
+//        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
 
         int online = Bukkit.getOnlinePlayers().size();
         if (online > 0) {
@@ -165,21 +167,24 @@ public class FreeForAll extends JavaPlugin {
                 UUID playerUUID = player.getUniqueId();
                 Optional<User> optional = dataStorage.loadUser(playerUUID);
 
-                if (!optional.isPresent()) {
+                if (!optional.isPresent()) { //Should always be false
                     optional = dataStorage.createUser(playerUUID, player.getName());
                     if (!optional.isPresent()) {
-                        throw new IllegalArgumentException("Failed to generate player data");
+                        player.kickPlayer(ChatColor.RED+"Failed to generate player data, please relog.");
+                        continue;
                     }
                 }
 
                 User user = optional.get();
-
                 if (!user.getName().equals(player.getName())) {
                     user.setName(player.getName());
                 }
 
                 UserManager.getUsers().add(user);
             }
+
+            getLogger().info("Loaded data of "+UserManager.getUsers().size()+"/"+online+" players.");
+
         }
 
         doSyncRepeating(() -> {

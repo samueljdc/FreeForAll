@@ -1,7 +1,7 @@
 storage:
     storageMethod: yaml
     yaml:
-        dataFile: data.yml
+        dataFile: data\data.yml
     mysql:
         host: localhost
         database: Minecraft
@@ -9,10 +9,13 @@ storage:
         password: password
         port: 3306
     sqlite:
-        dataFile: data.sqlite
-
+        dataFile: data\data.sqlite
 settings:
     combat:
         disablePlayerCollision: true
+        playerRespawnImmunity: 0
+        pvpLogger: false
+        pvpLoggerDuration: 0
+    defaultKit: "KIT_NAME_HERE"
 messages:
-
+version: 1.0

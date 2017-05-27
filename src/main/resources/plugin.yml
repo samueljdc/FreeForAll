@@ -6,8 +6,11 @@ author: AngryPostman
 
 commands:
     stats:
-        description: "View user statistics."
-
+    resetstats:
+    kit:
+    savekit:
+    setspawn:
+    delspawn:
 permission:
     freeforall.*:
         default: op
@@ -18,5 +21,8 @@ permission:
         children:
             freeforall.command.stats: true
             freeforall.command.stats.viewOther: true
-    freeforall.command.stats:
-        default: op
+            freeforall.command.resetstats: true
+            freeforall.command.kit: true
+            freeforall.command.savekit: true
+            freeforall.command.setspawn: true
+            freeforall.command.delspawn: true

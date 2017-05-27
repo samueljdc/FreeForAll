@@ -72,7 +72,7 @@ public class MySQLStorage extends DataStorage {
                         "`deaths` INT(11) NOT NULL DEFAULT '0'";
                 String query = "CREATE TABLE `"+table+"`("+values+");";
                 statement = connection.prepareStatement(query);
-                statement.executeQuery();
+                statement.executeUpdate();
 
                 plugin.getLogger().info("Table `"+table+"` has been created!");
             } else {

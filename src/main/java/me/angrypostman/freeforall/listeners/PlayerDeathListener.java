@@ -30,7 +30,7 @@ public class PlayerDeathListener implements Listener {
 
         if (!optional.isPresent()) { //This should NEVER happen
             player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog");
-            throw new IllegalArgumentException("failed to load player data of '"+player.getName()+"'.");
+            return;
         }
 
         User user = optional.get();
