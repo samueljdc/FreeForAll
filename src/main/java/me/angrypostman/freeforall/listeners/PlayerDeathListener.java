@@ -6,6 +6,8 @@ import me.angrypostman.freeforall.user.*;
 
 import me.angrypostman.freeforall.util.PlayerUtils;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -50,7 +52,9 @@ public class PlayerDeathListener implements Listener {
         userData.addDeath();
         userData.endStreak();
 
-        PlayerUtils.forceRespawn(user, null);
+        World world = player.getWorld();
+
+        PlayerUtils.forceRespawn(user, world.getSpawnLocation());
 
     }
 

@@ -27,9 +27,7 @@ public class KitCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
 
-        if (!command.getName().equalsIgnoreCase("kit")) {
-            return false;
-        }
+        if (!command.getName().equalsIgnoreCase("kit")) return false;
 
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage("You must be a player to perform this command.");
@@ -46,7 +44,7 @@ public class KitCommand implements CommandExecutor {
 
         if (!userOptional.isPresent()) {
             player.sendMessage(ChatColor.RED+"Failed to load player data, please relog");
-            return false;
+            return true;
         }
 
         User user = userOptional.get();
@@ -61,7 +59,7 @@ public class KitCommand implements CommandExecutor {
 
         if (!kitOptional.isPresent()) {
             player.sendMessage(ChatColor.RED+"Unknown kit '"+kitName+"'");
-            return false;
+            return true;
         }
 
         FFAKit kit = kitOptional.get();
@@ -73,6 +71,6 @@ public class KitCommand implements CommandExecutor {
 
         KitManager.giveItems(user, kit);
         player.sendMessage(ChatColor.GREEN+"You have been given the '"+kitName+"' kit");
-        return false;
+        return true;
     }
 }

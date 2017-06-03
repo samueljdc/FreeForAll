@@ -11,6 +11,8 @@ commands:
     savekit:
     setspawn:
     delspawn:
+    leaderboard:
+        aliases: [top, records]
 permission:
     freeforall.*:
         default: op

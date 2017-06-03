@@ -25,6 +25,7 @@ public class User {
     public User(int playerId, UUID playerUUID, String name, int points, int kills, int deaths) {
         this.playerId = playerId;
         this.playerUUID = playerUUID;
+        this.name = name;
         this.userData = new UserData(playerUUID, kills, deaths, points/*, Maps.newHashMap()*/);
         this.downloadTime = System.currentTimeMillis();
     }

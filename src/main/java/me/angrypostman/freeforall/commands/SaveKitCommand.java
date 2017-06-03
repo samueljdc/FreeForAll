@@ -29,6 +29,8 @@ public class SaveKitCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
 
+        if (!command.getName().equalsIgnoreCase("savekit")) return false;
+
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage("You must be a player to perform this command.");
             return true;
@@ -50,8 +52,17 @@ public class SaveKitCommand implements CommandExecutor {
 
         String name = args[0].toLowerCase();
         String permission = (args.length > 1 ? args[1].toLowerCase() : null);
+        if (permission != null && !permission.matches("([a-z]+\\.?)+")) {
+            player.sendMessage(ChatColor.RED+"Please enter a valid permission node.");
+            return true;
+        }
 
-        if (KitManager.getKit(name) != null) {
+        if (permission != null && KitManager.getKits().stream().anyMatch(ffakit -> ffakit.getPermission().equalsIgnoreCase(permission))) {
+            player.sendMessage(ChatColor.RED+"Permission nodes must be unique.");
+            return true;
+        }
+
+        if (KitManager.getKit(name).isPresent()) {
             player.sendMessage(ChatColor.RED+"A kit already exists with that name");
             return true;
         }
@@ -72,7 +83,7 @@ public class SaveKitCommand implements CommandExecutor {
         KitManager.registerKit(kit);
         KitManager.saveKit(kit);
 
-        player.sendMessage(ChatColor.GREEN+name+" has been created");
+        player.sendMessage(ChatColor.GREEN+kit.getName()+" has been created");
         return false;
     }
 }

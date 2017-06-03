@@ -22,7 +22,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
 import java.io.InputStreamReader;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +32,7 @@ public class FreeForAll extends JavaPlugin {
 
     /*
          1. Data Storage > SQLite and YML data storage implementation
-         2. Commands > Set spawn (multiple) (use data storage or local yml?)
+         2. Commands > Set spawn (multiple)
          3. Commands > Del spawn
          4. EntityDamageListener > Spawned creatures that attack a player still trigger the combat tag
          5. PlayerDeathListener > Reward killer (increment points, kills, killStreak, anything else?), subtract
@@ -46,7 +45,6 @@ public class FreeForAll extends JavaPlugin {
          10. Kits > Load kits,
          11. Optional chat formatting at some point (after release)
          12. Implement player ranking
-         13. Commands > Reset stats
          14. Commands > Leaderboard (/leaderboard [page] (aliases: /top))
      */
 
@@ -103,7 +101,7 @@ public class FreeForAll extends JavaPlugin {
         try {
             YamlConfiguration config = new YamlConfiguration();
             config.load(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8));
-            validateConfig(config, getConfig());
+            syncConfig(config, getConfig());
             saveConfig();
         } catch (Exception e) {
             getLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
@@ -154,6 +152,7 @@ public class FreeForAll extends JavaPlugin {
         getCommand("resetstats").setExecutor(new ResetStatsCommand(this));
         getCommand("kit").setExecutor(new KitCommand(this));
         getCommand("savekit").setExecutor(new SaveKitCommand(this));
+        getCommand("leaderboard").setExecutor(new LeaderboardCommand(this));
 //        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
 //        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
 
@@ -227,10 +226,8 @@ public class FreeForAll extends JavaPlugin {
         return configuration;
     }
 
-    private void validateConfig(ConfigurationSection from, ConfigurationSection to) {
-        from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey)).forEachOrdered(fromKey -> {
-            to.set(fromKey, from.get(fromKey));
-        });
+    private void syncConfig(ConfigurationSection from, ConfigurationSection to) {
+        from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey)).forEachOrdered(fromKey -> to.set(fromKey, from.get(fromKey)));
     }
 
 }

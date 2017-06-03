@@ -6,12 +6,14 @@ import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.util.FileUtils;
 
+import org.bukkit.Location;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -76,6 +78,21 @@ public class YamlStorage extends DataStorage {
     @Override
     public void saveUser(User user) {
 
+    }
+
+    @Override
+    public List<User> getLeardboardTop(int page) {
+        return null;
+    }
+
+    @Override
+    public void saveLocation(Location location) {
+
+    }
+
+    @Override
+    public List<Location> getLocations() {
+        return null;
     }
 
     public File getFile() {

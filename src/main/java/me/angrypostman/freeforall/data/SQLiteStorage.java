@@ -2,8 +2,10 @@ package me.angrypostman.freeforall.data;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
+import org.bukkit.Location;
 
 import java.io.File;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -45,6 +47,21 @@ public class SQLiteStorage extends DataStorage {
     @Override
     public void saveUser(User user) {
 
+    }
+
+    @Override
+    public List<User> getLeardboardTop(int page) {
+        return null;
+    }
+
+    @Override
+    public void saveLocation(Location location) {
+
+    }
+
+    @Override
+    public List<Location> getLocations() {
+        return null;
     }
 
     public File getFile() {

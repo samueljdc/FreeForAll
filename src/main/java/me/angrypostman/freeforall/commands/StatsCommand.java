@@ -30,16 +30,16 @@ public class StatsCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
 
-        if (!command.getName().equalsIgnoreCase("stats")) {
-            return false;
-        }
+        if (!command.getName().equalsIgnoreCase("stats")) return false;
 
         if (!(commandSender instanceof Player)) {
-            return false;
+            commandSender.sendMessage("You must be a player to perform this command.");
+            return true;
         }
 
         if (!commandSender.hasPermission("freeforall.command.stats")) {
-            return false;
+            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+            return true;
         }
 
         Player player = (Player) commandSender;
@@ -70,26 +70,21 @@ public class StatsCommand implements CommandExecutor {
 
         } else {
 
-            doAsync(() -> {
 
-                Optional<User> tempUser = UserManager.getUser(player.getUniqueId());
-                if (!tempUser.isPresent()) {
-                    doSync(() -> player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog."));
-                    return;
-                }
+            Optional<User> tempUser = UserManager.getUserIfPresent(player.getUniqueId());
+            if (!tempUser.isPresent()) {
+                doSync(() -> player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog."));
+                return false;
+            }
 
-                User user = tempUser.get();
-                UserData userData = user.getUserData();
+            User user = tempUser.get();
+            UserData userData = user.getUserData();
 
-                doSync(() -> {
-                    player.sendMessage(ChatColor.GOLD + "FFA >> " + user.getName() + "'s stats");
-                    //player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
-                });
-
-            });
+            player.sendMessage(ChatColor.GOLD + "FFA >> " + user.getName() + "'s stats");
+            //player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
+            player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
+            player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
+            player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
 
         }
 

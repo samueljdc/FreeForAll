@@ -2,17 +2,19 @@ package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
 
+import com.google.common.collect.ImmutableList;
 import com.zaxxer.hikari.HikariDataSource;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 
 import java.sql.*;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class MySQLStorage extends DataStorage {
@@ -25,19 +27,24 @@ public class MySQLStorage extends DataStorage {
     private String password = null;
     private int port = 0;
 
+    private List<Location> locations;
+
+    private static final int PAGE_ROWS = 10;
+
     public MySQLStorage(FreeForAll plugin, String host, String database, String username, String password, int port) {
         this.host = host;
         this.database = database;
         this.username = username;
         this.password = password;
         this.port = port;
+        this.locations = new ArrayList<>();
         this.plugin = plugin;
     }
 
     @Override
     public boolean initialize() {
 
-        Preconditions.checkState(dataSource == null || !dataSource.isClosed(), "data source already initialized.");
+        Preconditions.checkArgument(dataSource == null || !dataSource.isClosed(), "data source already initialized.");
 
         plugin.getLogger().info("Initializing database connection pool...");
 
@@ -53,6 +60,7 @@ public class MySQLStorage extends DataStorage {
 
         Connection connection = null;
         PreparedStatement statement = null;
+        ResultSet set = null;
         try {
             connection = getConnection();
             DatabaseMetaData databaseMeta = connection.getMetaData();
@@ -67,7 +75,7 @@ public class MySQLStorage extends DataStorage {
                         "`playerUUID` VARCHAR(36) NOT NULL," +
                         "`playerName` VARCHAR(16) NOT NULL," +
                         "`lookupName` VARCHAR(16) NOT NULL, " +
-                        "`points` INT(11) NOT NULL DEFAULT '100'," +
+                        "`points` INT(11) NOT NULL DEFAULT '0'," +
                         "`kills` INT(11) NOT NULL DEFAULT '0'," +
                         "`deaths` INT(11) NOT NULL DEFAULT '0'";
                 String query = "CREATE TABLE `"+table+"`("+values+");";
@@ -79,11 +87,68 @@ public class MySQLStorage extends DataStorage {
                 plugin.getLogger().info("Found table `"+table+"`!");
             }
 
+            table = "ffa_locations";
+            if (!databaseMeta.getTables(null, null, table, null).next()) {
+
+                plugin.getLogger().info("Table `"+table+"` not found, creating it...");
+                String values = "`locationId` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," +
+                        "`world` TEXT NOT NULL, " +
+                        "`locationX` DOUBLE NOT NULL DEFAULT '0.0'," +
+                        "`locationY` DOUBLE NOT NULL DEFAULT '0.0'," +
+                        "`locationZ` DOUBLE NOT NULL DEFAULT '0.0'," +
+                        "`locationPitch` FLOAT NOT NULL DEFAULT '0'," +
+                        "`locationYaw` FLOAT NOT NULL DEFAULT '0'";
+                String query = "CREATE TABLE `"+table+"`("+values+");";
+                statement = connection.prepareStatement(query);
+                statement.executeUpdate();
+
+                plugin.getLogger().info("Table `"+table+"` has been created!");
+            } else {
+                plugin.getLogger().info("Found table `"+table+"`!");
+
+                //Table exists so query the table for existing data
+
+                this.locations.clear();
+
+                String query = "SELECT * FROM `ffa_locations`;";
+                statement = connection.prepareStatement(query);
+                set = statement.executeQuery();
+
+                List<Location> locations = new ArrayList<>();
+
+                while (set.next()) {
+
+                    String world = set.getString("world");
+                    World bukkitWorld = Bukkit.getWorld(world);
+
+                    if (bukkitWorld == null) throw new IllegalArgumentException("Unknown world '"+world+"'");
+
+                    double locationX = set.getDouble("locationX");
+                    double locationY = set.getDouble("locationY");
+                    double locationZ = set.getDouble("locationZ");
+                    float locationPitch = set.getFloat("locationPitch");
+                    float locationYaw = set.getFloat("locationYaw");
+
+                    Location location = new Location(bukkitWorld, locationX, locationY, locationZ, locationPitch, locationYaw);
+                    locations.add(location);
+
+                }
+
+                this.locations.addAll(locations);
+
+            }
+
         } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst validating MySQL tables.");
             plugin.getLogger().info("Message: "+ex.getMessage());
             return false;
         } finally {
+
+            if (set != null) {
+                try {
+                    set.close();
+                } catch (SQLException ignored) {}
+            }
 
             if (statement != null) {
                 try {
@@ -188,7 +253,7 @@ public class MySQLStorage extends DataStorage {
 
             connection = getConnection();
 
-            String query = "SELECT * FROM `ffa_player_data` WHERE `uuid`=? LIMIT 1;";
+            String query = "SELECT * FROM `ffa_player_data` WHERE `playerUUID`=? LIMIT 1;";
 
             statement = connection.prepareStatement(query);
             statement.setString(1, uuid.toString());
@@ -340,6 +405,111 @@ public class MySQLStorage extends DataStorage {
 
         }
 
+    }
+
+    @Override
+    public List<User> getLeardboardTop(int page) {
+
+        List<User> leaderboard = new ArrayList<>();
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        ResultSet set = null;
+        try {
+
+            connection = getConnection();
+
+            String query = "SELECT `playerUUID` FROM `ffa_player_data` ORDER BY `points` DESC LIMIT "+((page - 1)*PAGE_ROWS)+", "+PAGE_ROWS;
+            statement = connection.prepareStatement(query);
+            set = statement.executeQuery();
+
+            while (set.next()) {
+
+                UUID playerUUID = UUID.fromString(set.getString("playerUUID"));
+                User user = loadUser(playerUUID).get(); //Never going to be not present
+
+                leaderboard.add(user);
+
+            }
+
+        } catch (SQLException ex) {
+            plugin.getLogger().info("An error occurred whilst retrieving leaderboard information");
+            plugin.getLogger().info("Message: "+ex.getMessage());
+        } finally {
+
+            if (set != null) {
+                try {
+                    set.close();
+                } catch (SQLException ignored) {}
+            }
+
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException ignored) {}
+            }
+
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException ignored) {}
+            }
+
+        }
+
+        return leaderboard;
+    }
+
+    @Override
+    public void saveLocation(Location location) {
+
+        Preconditions.checkNotNull(location, "location cannot be null");
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+
+            connection = getConnection();
+
+            Location clone = location.clone();
+
+            String query = "INSERT INTO `ffa_locations`(world, locationX, locationY, locationZ, locationPitch, locationYaw) VALUES(?, ?, ?, ?, ?, ?);";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, clone.getWorld().getName());
+            statement.setDouble(2, clone.getX());
+            statement.setDouble(3, clone.getY());
+            statement.setDouble(4, clone.getZ());
+            statement.setFloat(5, clone.getPitch());
+            statement.setFloat(6, clone.getYaw());
+
+            statement.executeUpdate();
+
+            this.locations.add(clone);
+
+        } catch (SQLException ex) {
+            plugin.getLogger().info("An error occurred whilst saving location data");
+            plugin.getLogger().info("Message: "+ex.getMessage());
+        } finally {
+
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException ignored) {}
+            }
+
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException ignored) {}
+            }
+
+        }
+
+    }
+
+    @Override
+    public List<Location> getLocations() {
+        return Collections.unmodifiableList(locations);
     }
 
     private Connection getConnection() throws SQLException {
