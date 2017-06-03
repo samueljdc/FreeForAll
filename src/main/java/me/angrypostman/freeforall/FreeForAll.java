@@ -10,7 +10,6 @@ import me.angrypostman.freeforall.listeners.*;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
 import me.angrypostman.freeforall.util.Configuration;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -48,7 +47,7 @@ public class FreeForAll extends JavaPlugin {
          14. Commands > Leaderboard (/leaderboard [page] (aliases: /top))
      */
 
-    private static FreeForAll plugin = null;
+    private static FreeForAll plugin;
 
     private DataStorage dataStorage = null;
     private Configuration configuration = null;
@@ -62,28 +61,28 @@ public class FreeForAll extends JavaPlugin {
     }
 
     public static void doAsync(Runnable runnable) {
-        Bukkit.getServer().getScheduler().runTaskAsynchronously(plugin, runnable);
+       FreeForAll.getPlugin().getServer().getScheduler().runTaskAsynchronously(plugin, runnable);
     }
 
     public static void doAsyncLater(Runnable runnable, long ticksLater) {
-        Bukkit.getServer().getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticksLater);
+        FreeForAll.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticksLater);
     }
 
     public static void doAsyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        Bukkit.getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable,
+        FreeForAll.getPlugin().getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable,
                 startAfterTicks, repeatDelayTicks);
     }
 
     public static void doSync(Runnable runnable) {
-        Bukkit.getServer().getScheduler().runTask(plugin, runnable);
+        FreeForAll.getPlugin().getServer().getScheduler().runTask(plugin, runnable);
     }
 
     public static void doSyncLater(Runnable runnable, long ticksLater) {
-        Bukkit.getScheduler().runTaskLater(plugin, runnable, ticksLater);
+        FreeForAll.getPlugin().getServer().getScheduler().runTaskLater(plugin, runnable, ticksLater);
     }
 
     public static void doSyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        Bukkit.getServer().getScheduler().runTaskTimer(plugin, runnable,
+        FreeForAll.getPlugin().getServer().getScheduler().runTaskTimer(plugin, runnable,
                 startAfterTicks, repeatDelayTicks);
     }
 
@@ -134,7 +133,7 @@ public class FreeForAll extends JavaPlugin {
         getLogger().info("Initializing data storage with storage method \"" + storageMethod.toUpperCase() + "\"...");
         if(!dataStorage.initialize()) {
             String message = "Failed to initialize data storage, please check the logs for further details.";
-            Bukkit.getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] "+message));
+            getServer().getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] "+message));
             getPluginLoader().disablePlugin(this);
             return;
         }
@@ -156,13 +155,13 @@ public class FreeForAll extends JavaPlugin {
 //        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
 //        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
 
-        int online = Bukkit.getOnlinePlayers().size();
+        int online = getServer().getOnlinePlayers().size();
         if (online > 0) {
             getLogger().info("Server reload detected, please refrain from doing this in the future as this can " +
                     "massively impair server performance.");
             getLogger().info("Attempting to load user data of " + online + " players, this may take a while...");
 
-            for (Player player : Bukkit.getOnlinePlayers()) {
+            for (Player player : getServer().getOnlinePlayers()) {
                 UUID playerUUID = player.getUniqueId();
                 Optional<User> optional = dataStorage.loadUser(playerUUID);
 
@@ -216,7 +215,7 @@ public class FreeForAll extends JavaPlugin {
         if (dataStorage != null) dataStorage.close();
         if (configuration != null) configuration.unload();
 
-        Bukkit.getScheduler().cancelTasks(this);
+        FreeForAll.getPlugin().getServer().getScheduler().cancelTasks(this);
         HandlerList.unregisterAll(this);
 
         plugin = null;
@@ -229,5 +228,4 @@ public class FreeForAll extends JavaPlugin {
     private void syncConfig(ConfigurationSection from, ConfigurationSection to) {
         from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey)).forEachOrdered(fromKey -> to.set(fromKey, from.get(fromKey)));
     }
-
 }
