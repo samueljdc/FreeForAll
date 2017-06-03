@@ -64,6 +64,7 @@ public class StatsCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
                     player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
                     player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
+                    player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKDR());
                 });
 
             });
@@ -85,6 +86,7 @@ public class StatsCommand implements CommandExecutor {
             player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
             player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
             player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
+            player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKDR());
 
         }
 

@@ -37,7 +37,7 @@ public class PlayerLoginListener implements Listener {
             if (!optional.isPresent()) {
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to load player data, please relog");
                 return;
-            }w
+            }
         }
 
         User user = optional.get();
