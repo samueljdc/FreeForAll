@@ -2,6 +2,7 @@ package me.angrypostman.freeforall.util;
 
 import com.google.common.base.Preconditions;
 
+import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -24,7 +25,7 @@ public class PlayerUtils {
 
             Player player = user.getBukkitPlayer();
 
-            String bukkitVersion = Bukkit.getServer().getClass()
+            String bukkitVersion = FreeForAll.getPlugin().getServer().getClass()
                     .getPackage().getName().substring(23);
 
             Class<?> cp = Class.forName("org.bukkit.craftbukkit."
