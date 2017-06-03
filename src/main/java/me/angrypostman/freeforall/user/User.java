@@ -3,7 +3,7 @@ package me.angrypostman.freeforall.user;
 import com.google.common.base.Preconditions;
 
 import com.google.common.collect.Maps;
-import org.bukkit.Bukkit;
+import me.angrypostman.freeforall.FreeForAll;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -51,7 +51,7 @@ public class User {
     }
 
     public Player getBukkitPlayer() {
-        return Bukkit.getPlayer(getPlayerUUID());
+        return FreeForAll.getPlugin().getServer().getPlayer(getPlayerUUID());
     }
 
     public UserData getUserData() {
