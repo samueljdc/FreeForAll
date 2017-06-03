@@ -9,7 +9,6 @@ import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -119,7 +118,7 @@ public class MySQLStorage extends DataStorage {
                 while (set.next()) {
 
                     String world = set.getString("world");
-                    World bukkitWorld = Bukkit.getWorld(world);
+                    World bukkitWorld = FreeForAll.getPlugin().getServer().getWorld(world);
 
                     if (bukkitWorld == null) throw new IllegalArgumentException("Unknown world '"+world+"'");
 
