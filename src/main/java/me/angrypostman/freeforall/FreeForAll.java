@@ -31,7 +31,6 @@ public class FreeForAll extends JavaPlugin {
 
     /*
          1. Data Storage > SQLite and YML data storage implementation
-         2. Commands > Set spawn (multiple)
          3. Commands > Del spawn
          4. EntityDamageListener > Spawned creatures that attack a player still trigger the combat tag
          5. PlayerDeathListener > Reward killer (increment points, kills, killStreak, anything else?), subtract
@@ -44,7 +43,8 @@ public class FreeForAll extends JavaPlugin {
          10. Kits > Load kits,
          11. Optional chat formatting at some point (after release)
          12. Implement player ranking
-         14. Commands > Leaderboard (/leaderboard [page] (aliases: /top))
+         15. Implement customizable messages
+         16. PlayerRespawnListener > Modify repsawn location
      */
 
     private static FreeForAll plugin;
@@ -152,7 +152,7 @@ public class FreeForAll extends JavaPlugin {
         getCommand("kit").setExecutor(new KitCommand(this));
         getCommand("savekit").setExecutor(new SaveKitCommand(this));
         getCommand("leaderboard").setExecutor(new LeaderboardCommand(this));
-//        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
+        getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
 //        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
 
         int online = getServer().getOnlinePlayers().size();
