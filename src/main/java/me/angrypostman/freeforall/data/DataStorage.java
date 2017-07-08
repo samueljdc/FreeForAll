@@ -25,7 +25,9 @@ public abstract class DataStorage {
 
     public abstract void saveLocation(Location location);
 
-//    public abstract void deleteLocation(?); //No idea what to do for this yet
+    public abstract void deleteLocation(int spawnId);
+
+    //public abstract void deleteLocation(Location location);
 
     public abstract List<Location> getLocations();
 

@@ -1,11 +1,8 @@
 package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
-
 import me.angrypostman.freeforall.kit.FFAKit;
 import me.angrypostman.freeforall.kit.KitManager;
-import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -17,11 +14,11 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 public class SaveKitCommand implements CommandExecutor {
 
     private FreeForAll plugin = null;
+
     public SaveKitCommand(FreeForAll plugin) {
         this.plugin = plugin;
     }
@@ -37,7 +34,7 @@ public class SaveKitCommand implements CommandExecutor {
         }
 
         if (!commandSender.hasPermission("freeforall.command.savekit")) {
-            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
@@ -46,24 +43,24 @@ public class SaveKitCommand implements CommandExecutor {
         PlayerInventory inventory = player.getInventory();
 
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED+"Correct usage: /savekit <name> [permission]");
+            player.sendMessage(ChatColor.RED + "Correct usage: /savekit <name> [permission]");
             return false;
         }
 
-        String name = args[0].toLowerCase();
+        String name = args[0];
         String permission = (args.length > 1 ? args[1].toLowerCase() : null);
         if (permission != null && !permission.matches("([a-z]+\\.?)+")) {
-            player.sendMessage(ChatColor.RED+"Please enter a valid permission node.");
+            player.sendMessage(ChatColor.RED + "Please enter a valid permission node.");
             return true;
         }
 
         if (permission != null && KitManager.getKits().stream().anyMatch(ffakit -> ffakit.getPermission().equalsIgnoreCase(permission))) {
-            player.sendMessage(ChatColor.RED+"Permission nodes must be unique.");
+            player.sendMessage(ChatColor.RED + "Permission nodes must be unique.");
             return true;
         }
 
         if (KitManager.getKit(name).isPresent()) {
-            player.sendMessage(ChatColor.RED+"A kit already exists with that name");
+            player.sendMessage(ChatColor.RED + "A kit already exists with that name");
             return true;
         }
 
@@ -74,8 +71,8 @@ public class SaveKitCommand implements CommandExecutor {
         kit.setBoots(inventory.getBoots());
 
         List<ItemStack> inventoryItems = new ArrayList<>();
-        for (ItemStack stack : inventory.getContents()) {
-            if (stack == null || stack.getType()== Material.AIR) continue;
+        for (ItemStack stack : inventory.getStorageContents()) {
+            if (stack == null || stack.getType() == Material.AIR) continue;
             inventoryItems.add(stack);
         }
 
@@ -83,7 +80,7 @@ public class SaveKitCommand implements CommandExecutor {
         KitManager.registerKit(kit);
         KitManager.saveKit(kit);
 
-        player.sendMessage(ChatColor.GREEN+kit.getName()+" has been created");
+        player.sendMessage(ChatColor.GREEN + kit.getName() + " has been created");
         return false;
     }
 }

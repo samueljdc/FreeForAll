@@ -20,6 +20,10 @@ public class NameFetcher implements Callable<Map<UUID, String>> {
         this.uuids = ImmutableList.copyOf(uuids);
     }
 
+    public static String getNameOf(UUID uuid) throws Exception {
+        return new NameFetcher(Collections.singletonList(uuid)).call().get(uuid);
+    }
+
     @Override
     public Map<UUID, String> call() throws Exception {
         Map<UUID, String> uuidStringMap = new HashMap<>();
@@ -38,10 +42,6 @@ public class NameFetcher implements Callable<Map<UUID, String>> {
             uuidStringMap.put(uuid, name);
         }
         return uuidStringMap;
-    }
-
-    public static String getNameOf(UUID uuid) throws Exception {
-        return new NameFetcher(Collections.singletonList(uuid)).call().get(uuid);
     }
 
 }

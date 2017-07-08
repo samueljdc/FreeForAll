@@ -6,6 +6,7 @@ import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.data.MySQLStorage;
 import me.angrypostman.freeforall.data.SQLiteStorage;
 import me.angrypostman.freeforall.data.YamlStorage;
+import me.angrypostman.freeforall.kit.KitManager;
 import me.angrypostman.freeforall.listeners.*;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
@@ -44,7 +45,7 @@ public class FreeForAll extends JavaPlugin {
          11. Optional chat formatting at some point (after release)
          12. Implement player ranking
          15. Implement customizable messages
-         16. PlayerRespawnListener > Modify repsawn location
+         17. Kill rewards (customizable), potion effects?
      */
 
     private static FreeForAll plugin;
@@ -56,34 +57,34 @@ public class FreeForAll extends JavaPlugin {
         return plugin;
     }
 
-    public DataStorage getDataStorage() {
-        return dataStorage;
-    }
-
     public static void doAsync(Runnable runnable) {
-       FreeForAll.getPlugin().getServer().getScheduler().runTaskAsynchronously(plugin, runnable);
+        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, runnable);
     }
 
     public static void doAsyncLater(Runnable runnable, long ticksLater) {
-        FreeForAll.getPlugin().getServer().getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticksLater);
+        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticksLater);
     }
 
     public static void doAsyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        FreeForAll.getPlugin().getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable,
+        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable,
                 startAfterTicks, repeatDelayTicks);
     }
 
     public static void doSync(Runnable runnable) {
-        FreeForAll.getPlugin().getServer().getScheduler().runTask(plugin, runnable);
+        plugin.getServer().getScheduler().runTask(plugin, runnable);
     }
 
     public static void doSyncLater(Runnable runnable, long ticksLater) {
-        FreeForAll.getPlugin().getServer().getScheduler().runTaskLater(plugin, runnable, ticksLater);
+        plugin.getServer().getScheduler().runTaskLater(plugin, runnable, ticksLater);
     }
 
     public static void doSyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        FreeForAll.getPlugin().getServer().getScheduler().runTaskTimer(plugin, runnable,
+        plugin.getServer().getScheduler().runTaskTimer(plugin, runnable,
                 startAfterTicks, repeatDelayTicks);
+    }
+
+    public DataStorage getDataStorage() {
+        return dataStorage;
     }
 
     @Override
@@ -91,6 +92,7 @@ public class FreeForAll extends JavaPlugin {
 
         plugin = this;
 
+        getLogger().info("Performing plugin startup procedure...");
         if (!new File(getDataFolder(), "config.yml").exists()) {
             getLogger().info("Failed to find configuration, saving default config...");
             saveDefaultConfig();
@@ -106,37 +108,41 @@ public class FreeForAll extends JavaPlugin {
             getLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
         }
 
+        getLogger().info("Loading configuration values...");
+
         configuration = new Configuration(this);
         configuration.load();
 
         String storageMethod = configuration.getStorageMethod();
-        if (storageMethod.equalsIgnoreCase("YAML") || storageMethod.equalsIgnoreCase("YML")) {
+        if (storageMethod.equalsIgnoreCase("yaml") || storageMethod.equalsIgnoreCase("yml")) {
             File file = configuration.getYAMLDataFile();
             dataStorage = new YamlStorage(this, file);
-        } else if (storageMethod.equalsIgnoreCase("MYSQL")) {
+        } else if (storageMethod.equalsIgnoreCase("mysql")) {
             String host = configuration.getSQLHost();
             String database = configuration.getSQLDatabase();
             String username = configuration.getSQLUser();
             String password = configuration.getSQLPassword();
             Integer port = configuration.getSQLPort();
             dataStorage = new MySQLStorage(this, host, database, username, password, port);
-        } else if (storageMethod.equalsIgnoreCase("SQLITE")) {
+        } else if (storageMethod.equalsIgnoreCase("sqlite")) {
             File file = configuration.getSQLiteDataFile();
             dataStorage = new SQLiteStorage(this, file);
         } else {
             getLogger().info("Unknown storage method \"" + storageMethod + "\".");
-            getLogger().info("Valid storage methods include: YAML (or YML), MYSQL, SQLITE");
+            getLogger().info("Valid storage methods include: yaml (or yml), mysql and sqlite");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
         getLogger().info("Initializing data storage with storage method \"" + storageMethod.toUpperCase() + "\"...");
-        if(!dataStorage.initialize()) {
+        if (!dataStorage.initialize()) {
             String message = "Failed to initialize data storage, please check the logs for further details.";
-            getServer().getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] "+message));
+            getServer().getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] " + message));
             getPluginLoader().disablePlugin(this);
             return;
         }
+
+        getLogger().info("Registering event listeners...");
 
         PluginManager manager = getServer().getPluginManager();
         manager.registerEvents(new EntityDamageListener(this), this);
@@ -144,16 +150,26 @@ public class FreeForAll extends JavaPlugin {
         manager.registerEvents(new PlayerLoginListener(this), this);
         manager.registerEvents(new PlayerJoinListener(this), this);
         manager.registerEvents(new PlayerQuitListener(this), this);
-        manager.registerEvents(new GeneralListeners(this), this);
+        manager.registerEvents(new PlayerRespawnListener(this), this);
+        manager.registerEvents(new EnvironmentListeners(this), this);
+
+        getLogger().info("Event listeners registered!");
+
+        getLogger().info("Registering commands...");
 
         //Might convert to using custom command handler at some point,
         getCommand("stats").setExecutor(new StatsCommand(this));
         getCommand("resetstats").setExecutor(new ResetStatsCommand(this));
         getCommand("kit").setExecutor(new KitCommand(this));
         getCommand("savekit").setExecutor(new SaveKitCommand(this));
+        getCommand("delkit").setExecutor(new DelKitCommand(this));
         getCommand("leaderboard").setExecutor(new LeaderboardCommand(this));
         getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
-//        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
+        getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
+
+        getLogger().info("Commands registered!");
+
+        KitManager.loadKits();
 
         int online = getServer().getOnlinePlayers().size();
         if (online > 0) {
@@ -168,7 +184,8 @@ public class FreeForAll extends JavaPlugin {
                 if (!optional.isPresent()) { //Should always be false
                     optional = dataStorage.createUser(playerUUID, player.getName());
                     if (!optional.isPresent()) {
-                        player.kickPlayer(ChatColor.RED+"Failed to generate player data, please relog.");
+                        getLogger().info("Failed to generate user data for " + player.getName() + "!");
+                        player.kickPlayer(ChatColor.RED + "Failed to generate player data, please relog.");
                         continue;
                     }
                 }
@@ -181,7 +198,7 @@ public class FreeForAll extends JavaPlugin {
                 UserManager.getUsers().add(user);
             }
 
-            getLogger().info("Loaded data of "+UserManager.getUsers().size()+"/"+online+" players.");
+            getLogger().info("Loaded data of " + UserManager.getUsers().size() + "/" + online + " players."); //Incase some failed
 
         }
 
@@ -208,17 +225,22 @@ public class FreeForAll extends JavaPlugin {
             //startAfterTicks = 60 * 10 * 20 (10 minutes), repeatDelayTicks = 60 * 10 * 20 (10 minutes)
         }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
 
+        getLogger().info("Plugin startup procedure complete!");
+
     }
 
     @Override
     public void onDisable() {
+        getLogger().info("Performing plugin shutdown procedure");
         if (dataStorage != null) dataStorage.close();
         if (configuration != null) configuration.unload();
 
-        FreeForAll.getPlugin().getServer().getScheduler().cancelTasks(this);
+        getServer().getScheduler().cancelTasks(this);
         HandlerList.unregisterAll(this);
 
         plugin = null;
+
+        getLogger().info("Plugin shutdown procedure complete!");
     }
 
     public Configuration getConfiguration() {

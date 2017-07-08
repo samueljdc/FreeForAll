@@ -60,6 +60,11 @@ public class SQLiteStorage extends DataStorage {
     }
 
     @Override
+    public void deleteLocation(int spawnId) {
+
+    }
+
+    @Override
     public List<Location> getLocations() {
         return null;
     }

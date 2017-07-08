@@ -1,11 +1,9 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
-
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.util.FileUtils;
-
 import org.bukkit.Location;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -87,6 +85,11 @@ public class YamlStorage extends DataStorage {
 
     @Override
     public void saveLocation(Location location) {
+
+    }
+
+    @Override
+    public void deleteLocation(int spawnId) {
 
     }
 

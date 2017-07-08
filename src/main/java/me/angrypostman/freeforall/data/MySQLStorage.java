@@ -1,10 +1,7 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
-
-import com.google.common.collect.ImmutableList;
 import com.zaxxer.hikari.HikariDataSource;
-
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
@@ -18,6 +15,7 @@ import java.util.concurrent.TimeUnit;
 
 public class MySQLStorage extends DataStorage {
 
+    private static final int PAGE_ROWS = 10;
     private FreeForAll plugin = null;
     private HikariDataSource dataSource = null;
     private String host = null;
@@ -25,10 +23,7 @@ public class MySQLStorage extends DataStorage {
     private String username = null;
     private String password = null;
     private int port = 0;
-
     private List<Location> locations;
-
-    private static final int PAGE_ROWS = 10;
 
     public MySQLStorage(FreeForAll plugin, String host, String database, String username, String password, int port) {
         this.host = host;
@@ -48,14 +43,15 @@ public class MySQLStorage extends DataStorage {
         plugin.getLogger().info("Initializing database connection pool...");
 
         dataSource = new HikariDataSource();
-        String jdbcUrl = "jdbc:mysql://"+getHost()+":"+getPort()+"/"+getDatabase();
+
+        String jdbcUrl = "jdbc:mysql://" + host + ":" + port + "/" + database;
         dataSource.setJdbcUrl(jdbcUrl);
         dataSource.setUsername(username);
         dataSource.setPassword(password);
         dataSource.setMaximumPoolSize(30);
         dataSource.setConnectionTimeout(TimeUnit.SECONDS.toMillis(5));
 
-        plugin.getLogger().info("Attempting to connect to "+dataSource.getJdbcUrl()+"@"+dataSource.getUsername()+"...");
+        plugin.getLogger().info("Attempting to connect to " + jdbcUrl + "@" + username + "...");
 
         Connection connection = null;
         PreparedStatement statement = null;
@@ -64,12 +60,12 @@ public class MySQLStorage extends DataStorage {
             connection = getConnection();
             DatabaseMetaData databaseMeta = connection.getMetaData();
 
-            plugin.getLogger().info("Connection established, validating tables...");
+            plugin.getLogger().info("A connection was successfully established to MySQL, validating tables...");
 
             String table = "ffa_player_data";
             if (!databaseMeta.getTables(null, null, table, null).next()) {
 
-                plugin.getLogger().info("Table `"+table+"` not found, creating it...");
+                plugin.getLogger().info("Table `" + table + "` not found, creating it...");
                 String values = "`playerId` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                         "`playerUUID` VARCHAR(36) NOT NULL," +
                         "`playerName` VARCHAR(16) NOT NULL," +
@@ -77,19 +73,19 @@ public class MySQLStorage extends DataStorage {
                         "`points` INT(11) NOT NULL DEFAULT '0'," +
                         "`kills` INT(11) NOT NULL DEFAULT '0'," +
                         "`deaths` INT(11) NOT NULL DEFAULT '0'";
-                String query = "CREATE TABLE `"+table+"`("+values+");";
+                String query = "CREATE TABLE `" + table + "`(" + values + ");";
                 statement = connection.prepareStatement(query);
                 statement.executeUpdate();
 
-                plugin.getLogger().info("Table `"+table+"` has been created!");
+                plugin.getLogger().info("Table `" + table + "` has been created!");
             } else {
-                plugin.getLogger().info("Found table `"+table+"`!");
+                plugin.getLogger().info("Found table `" + table + "`!");
             }
 
             table = "ffa_locations";
             if (!databaseMeta.getTables(null, null, table, null).next()) {
 
-                plugin.getLogger().info("Table `"+table+"` not found, creating it...");
+                plugin.getLogger().info("Table `" + table + "` not found, creating it...");
                 String values = "`locationId` INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY," +
                         "`world` TEXT NOT NULL, " +
                         "`locationX` DOUBLE NOT NULL DEFAULT '0.0'," +
@@ -97,30 +93,30 @@ public class MySQLStorage extends DataStorage {
                         "`locationZ` DOUBLE NOT NULL DEFAULT '0.0'," +
                         "`locationPitch` FLOAT NOT NULL DEFAULT '0'," +
                         "`locationYaw` FLOAT NOT NULL DEFAULT '0'";
-                String query = "CREATE TABLE `"+table+"`("+values+");";
+                String query = "CREATE TABLE `" + table + "`(" + values + ");";
                 statement = connection.prepareStatement(query);
                 statement.executeUpdate();
 
-                plugin.getLogger().info("Table `"+table+"` has been created!");
+                plugin.getLogger().info("Table `" + table + "` has been created!");
             } else {
-                plugin.getLogger().info("Found table `"+table+"`!");
+                plugin.getLogger().info("Found table `" + table + "`!");
 
                 //Table exists so query the table for existing data
 
                 this.locations.clear();
 
+                List<Location> locations = new ArrayList<>();
+
                 String query = "SELECT * FROM `ffa_locations`;";
                 statement = connection.prepareStatement(query);
                 set = statement.executeQuery();
 
-                List<Location> locations = new ArrayList<>();
-
                 while (set.next()) {
 
                     String world = set.getString("world");
-                    World bukkitWorld = FreeForAll.getPlugin().getServer().getWorld(world);
+                    World bukkitWorld = plugin.getServer().getWorld(world);
 
-                    if (bukkitWorld == null) throw new IllegalArgumentException("Unknown world '"+world+"'");
+                    if (bukkitWorld == null) throw new IllegalArgumentException("Unknown world '" + world + "'");
 
                     double locationX = set.getDouble("locationX");
                     double locationY = set.getDouble("locationY");
@@ -134,31 +130,35 @@ public class MySQLStorage extends DataStorage {
                 }
 
                 this.locations.addAll(locations);
+                plugin.getLogger().info("Loaded "+this.locations.size()+" spawn points.");
 
             }
 
         } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst validating MySQL tables.");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("Message: " + ex.getMessage());
             return false;
         } finally {
 
             if (set != null) {
                 try {
                     set.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -209,26 +209,29 @@ public class MySQLStorage extends DataStorage {
 
             return Optional.of(new User(set.getInt(1), playerUUID, playerName)); //defaults for everything else
         } catch (SQLException ex) {
-            plugin.getLogger().info("An error occurred whilst attempting to create database record for '"+playerName+"'");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("An error occurred whilst attempting to create database record for '" + playerName + "'");
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (set != null) {
                 try {
                     set.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -270,26 +273,29 @@ public class MySQLStorage extends DataStorage {
             }
 
         } catch (SQLException ex) {
-            plugin.getLogger().info("An error occurred whilst loading user data for '"+uuid+"'");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("An error occurred whilst loading user data for '" + uuid + "'");
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (set != null) {
                 try {
                     set.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -332,26 +338,29 @@ public class MySQLStorage extends DataStorage {
             }
 
         } catch (SQLException ex) {
-            plugin.getLogger().info("An error occurred whilst loading user data for '"+lookupName+"'");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("An error occurred whilst loading user data for '" + lookupName + "'");
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (set != null) {
                 try {
                     set.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -386,20 +395,22 @@ public class MySQLStorage extends DataStorage {
 
             statement.executeUpdate();
         } catch (SQLException ex) {
-            plugin.getLogger().info("An error occurred whilst saving user data for '"+user.getName()+"'");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("An error occurred whilst saving user data for '" + user.getName() + "'");
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -418,7 +429,7 @@ public class MySQLStorage extends DataStorage {
 
             connection = getConnection();
 
-            String query = "SELECT `playerUUID` FROM `ffa_player_data` ORDER BY `points` DESC LIMIT "+((page - 1)*PAGE_ROWS)+", "+PAGE_ROWS;
+            String query = "SELECT `playerUUID` FROM `ffa_player_data` ORDER BY `points` DESC LIMIT " + ((page - 1) * PAGE_ROWS) + ", " + PAGE_ROWS;
             statement = connection.prepareStatement(query);
             set = statement.executeQuery();
 
@@ -433,25 +444,28 @@ public class MySQLStorage extends DataStorage {
 
         } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst retrieving leaderboard information");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (set != null) {
                 try {
                     set.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -487,19 +501,70 @@ public class MySQLStorage extends DataStorage {
 
         } catch (SQLException ex) {
             plugin.getLogger().info("An error occurred whilst saving location data");
-            plugin.getLogger().info("Message: "+ex.getMessage());
+            plugin.getLogger().info("Message: " + ex.getMessage());
         } finally {
 
             if (statement != null) {
                 try {
                     statement.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
             }
 
             if (connection != null) {
                 try {
                     connection.close();
-                } catch (SQLException ignored) {}
+                } catch (SQLException ignored) {
+                }
+            }
+
+        }
+
+    }
+
+    @Override
+    public void deleteLocation(int spawnId) {
+
+        Preconditions.checkArgument(spawnId >= 0 && spawnId <= locations.size(), "invalid spawnId");
+
+        Connection connection = null;
+        PreparedStatement statement = null;
+        try {
+
+            connection = getConnection();
+
+            Location location = locations.get(spawnId);
+
+            //Probably a better way to do this, but if you're setting spawn locations
+            //in the same place, then expect things to break, you're just asking for it
+            String query = "DELETE FROM `ffa_locations` WHERE `world`=? AND `locationX`=? AND `locationY`=? AND `locationZ`=?";
+            statement = connection.prepareStatement(query);
+            statement.setString(1, location.getWorld().getName());
+            statement.setDouble(2, location.getX());
+            statement.setDouble(3, location.getY());
+            statement.setDouble(4, location.getZ());
+
+            statement.executeUpdate();
+
+            this.locations.remove(location);
+
+        } catch (SQLException ex) {
+            plugin.getLogger().info("An error occurred whilst deleting location data");
+            plugin.getLogger().info("Message: " + ex.getMessage());
+        } finally {
+
+            if (statement != null) {
+                try {
+                    statement.close();
+                } catch (SQLException ignored) {
+                }
+            }
+
+            if (connection != null) {
+                try {
+                    connection.close();
+                } catch (SQLException ignored) {
+                }
             }
 
         }
@@ -508,7 +573,7 @@ public class MySQLStorage extends DataStorage {
 
     @Override
     public List<Location> getLocations() {
-        return Collections.unmodifiableList(locations);
+        return locations;
     }
 
     private Connection getConnection() throws SQLException {

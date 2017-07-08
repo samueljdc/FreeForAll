@@ -16,6 +16,7 @@ public class PlayerJoinListener implements Listener {
 
     private FreeForAll plugin = null;
     private DataStorage dataStorage = null;
+
     public PlayerJoinListener(FreeForAll plugin) {
         this.plugin = plugin;
         this.dataStorage = plugin.getDataStorage();
@@ -28,10 +29,9 @@ public class PlayerJoinListener implements Listener {
         Optional<User> optional = UserManager.getUserIfPresent(player);
 
         if (!optional.isPresent()) {
-            player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog.");
+            player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
             return;
         }
-
 
 
     }

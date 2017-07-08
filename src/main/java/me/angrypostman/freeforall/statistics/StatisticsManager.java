@@ -1,11 +1,9 @@
 package me.angrypostman.freeforall.statistics;
 
 import com.google.common.base.Preconditions;
-
 import org.bukkit.entity.Player;
 
 import java.util.*;
-import java.util.stream.Stream;
 
 //This class will come into use at a later date
 public class StatisticsManager {

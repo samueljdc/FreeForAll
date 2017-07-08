@@ -1,12 +1,8 @@
 package me.angrypostman.freeforall.user;
 
-import com.google.common.base.Preconditions;
-
-import com.google.common.collect.Maps;
 import me.angrypostman.freeforall.FreeForAll;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.UUID;
 
 public class User {
@@ -18,6 +14,8 @@ public class User {
     private UserData userData;
     private long downloadTime = 0L;
 
+    private FreeForAll plugin = null;
+
     public User(int playerId, UUID playerUUID, String name) {
         this(playerId, playerUUID, name, 0, 0, 0);
     }
@@ -26,8 +24,9 @@ public class User {
         this.playerId = playerId;
         this.playerUUID = playerUUID;
         this.name = name;
-        this.userData = new UserData(playerUUID, kills, deaths, points/*, Maps.newHashMap()*/);
+        this.userData = new UserData(kills, deaths, points/*, Maps.newHashMap()*/);
         this.downloadTime = System.currentTimeMillis();
+        this.plugin = FreeForAll.getPlugin();
     }
 
     public int getPlayerId() {
@@ -51,7 +50,7 @@ public class User {
     }
 
     public Player getBukkitPlayer() {
-        return FreeForAll.getPlugin().getServer().getPlayer(getPlayerUUID());
+        return plugin.getServer().getPlayer(getPlayerUUID());
     }
 
     public UserData getUserData() {

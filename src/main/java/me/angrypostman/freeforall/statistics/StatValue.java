@@ -1,10 +1,7 @@
 package me.angrypostman.freeforall.statistics;
 
 import com.google.common.base.Preconditions;
-
 import me.angrypostman.freeforall.user.User;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemStack;
 
 public class StatValue implements Cloneable {
 

@@ -1,11 +1,8 @@
 package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
-import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.kit.FFAKit;
 import me.angrypostman.freeforall.kit.KitManager;
-import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -14,40 +11,29 @@ import org.bukkit.entity.Player;
 
 import java.util.Optional;
 
-public class KitCommand implements CommandExecutor {
+public class DelKitCommand implements CommandExecutor {
 
     private FreeForAll plugin = null;
-    private DataStorage storage = null;
-
-    public KitCommand(FreeForAll plugin) {
+    public DelKitCommand(FreeForAll plugin) {
         this.plugin = plugin;
-        this.storage = plugin.getDataStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
+    public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args) {
 
-        if (!command.getName().equalsIgnoreCase("kit")) return false;
+        if (!command.getName().equalsIgnoreCase("delkit")) return false;
 
         if (!(commandSender instanceof Player)) {
             commandSender.sendMessage("You must be a player to perform this command.");
             return true;
         }
 
-        if (!commandSender.hasPermission("freeforall.command.kit")) {
+        if (!commandSender.hasPermission("freeforall.command.delkit")) {
             commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
         Player player = (Player) commandSender;
-        Optional<User> userOptional = UserManager.getUserIfPresent(player);
-
-        if (!userOptional.isPresent()) {
-            player.sendMessage(ChatColor.RED + "Failed to load player data, please relog");
-            return true;
-        }
-
-        User user = userOptional.get();
 
         if (args.length < 1) {
             player.sendMessage(ChatColor.RED + "Correct usage: /delkit <name>");
@@ -63,14 +49,10 @@ public class KitCommand implements CommandExecutor {
         }
 
         FFAKit kit = kitOptional.get();
+        KitManager.deleteKit(kit);
 
-        if (kit.hasPermission() && !player.hasPermission(kit.getPermission())) {
-            player.sendMessage(ChatColor.RED + "You don't have permission for that kit.");
-            return true;
-        }
+        player.sendMessage(ChatColor.RED+kit.getName()+" has been deleted.");
 
-        KitManager.giveItems(user, kit);
-        player.sendMessage(ChatColor.GREEN + "You have been given the '" + kit.getName() + "' kit");
-        return true;
+        return false;
     }
 }

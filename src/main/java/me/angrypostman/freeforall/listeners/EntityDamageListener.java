@@ -6,13 +6,9 @@ import me.angrypostman.freeforall.user.Combat;
 import me.angrypostman.freeforall.user.Damage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByBlockEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
@@ -22,6 +18,7 @@ public class EntityDamageListener implements Listener {
 
     private FreeForAll plugin = null;
     private DataStorage storage = null;
+
     public EntityDamageListener(FreeForAll plugin) {
         this.plugin = plugin;
         this.storage = plugin.getDataStorage();
@@ -70,19 +67,12 @@ public class EntityDamageListener implements Listener {
                 }
             }
 
-            if (attacker != null) {
-
-                if (attacker.isPresent()) {
-                    Damage damage = new Damage(user, attacker.get(), finalDamage);
-                    Combat.setLastDamage(user, damage);
-                } else {
-                    event.setCancelled(true);
-                }
-
+            if (attacker != null && attacker.isPresent()) {
+                Damage damage = new Damage(user, attacker.get(), finalDamage);
+                Combat.setLastDamage(user, damage);
             }
 
         }
-
 
 
     }

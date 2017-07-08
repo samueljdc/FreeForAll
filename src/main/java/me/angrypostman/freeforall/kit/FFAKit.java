@@ -1,7 +1,7 @@
 package me.angrypostman.freeforall.kit;
 
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.potion.PotionEffect;
 
 import java.util.List;
 
@@ -40,12 +40,20 @@ public class FFAKit {
         return helmet;
     }
 
+    public void setHelmet(Material helmet) {
+        this.helmet = new ItemStack(helmet);
+    }
+
     public void setHelmet(ItemStack helmet) {
         this.helmet = helmet;
     }
 
     public ItemStack getChestplate() {
         return chestplate;
+    }
+
+    public void setChestplate(Material chestplate) {
+        this.chestplate = new ItemStack(chestplate);
     }
 
     public void setChestplate(ItemStack chestplate) {
@@ -56,12 +64,20 @@ public class FFAKit {
         return leggings;
     }
 
+    public void setLeggings(Material leggings) {
+        this.leggings = new ItemStack(leggings);
+    }
+
     public void setLeggings(ItemStack leggings) {
         this.leggings = leggings;
     }
 
     public ItemStack getBoots() {
         return boots;
+    }
+
+    public void setBoots(Material boots) {
+        this.boots = new ItemStack(boots);
     }
 
     public void setBoots(ItemStack boots) {

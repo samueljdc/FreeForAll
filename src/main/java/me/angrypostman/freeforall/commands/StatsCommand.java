@@ -5,7 +5,6 @@ import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -38,7 +37,7 @@ public class StatsCommand implements CommandExecutor {
         }
 
         if (!commandSender.hasPermission("freeforall.command.stats")) {
-            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
@@ -64,7 +63,7 @@ public class StatsCommand implements CommandExecutor {
                     player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
                     player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
                     player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKDR());
+                    player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKillDeathRatio());
                 });
 
             });
@@ -86,7 +85,7 @@ public class StatsCommand implements CommandExecutor {
             player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
             player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
             player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
-            player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKDR());
+            player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKillDeathRatio());
 
         }
 

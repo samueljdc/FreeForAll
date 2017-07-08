@@ -1,10 +1,8 @@
 package me.angrypostman.freeforall.util;
 
 import com.google.common.base.Preconditions;
-
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -16,6 +14,12 @@ import static me.angrypostman.freeforall.FreeForAll.doSyncLater;
 
 public class PlayerUtils {
 
+    private static FreeForAll plugin = null;
+
+    static {
+        plugin = FreeForAll.getPlugin();
+    }
+
     public static void forceRespawn(User user, Location location) {
 
         Preconditions.checkNotNull(user, "user");
@@ -25,7 +29,7 @@ public class PlayerUtils {
 
             Player player = user.getBukkitPlayer();
 
-            String bukkitVersion = FreeForAll.getPlugin().getServer().getClass()
+            String bukkitVersion = plugin.getServer().getClass()
                     .getPackage().getName().substring(23);
 
             Class<?> cp = Class.forName("org.bukkit.craftbukkit."

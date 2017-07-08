@@ -7,7 +7,7 @@ public class FileUtils {
     public static String getFileExtension(File file) {
         String absolutePath = file.getAbsolutePath();
         int lastIndexOf = absolutePath.lastIndexOf(".");
-        return absolutePath.substring(lastIndexOf+1);
+        return absolutePath.substring(lastIndexOf + 1);
     }
 
 }

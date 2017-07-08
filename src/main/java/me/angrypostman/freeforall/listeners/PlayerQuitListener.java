@@ -3,8 +3,6 @@ package me.angrypostman.freeforall.listeners;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.*;
-
-import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,6 +16,7 @@ public class PlayerQuitListener implements Listener {
 
     private FreeForAll plugin = null;
     private DataStorage storage = null;
+
     public PlayerQuitListener(FreeForAll plugin) {
         this.plugin = plugin;
         this.storage = plugin.getDataStorage();
@@ -52,8 +51,10 @@ public class PlayerQuitListener implements Listener {
 
         }
 
-        doAsync(() -> storage.saveUser(user));
-        UserManager.getUsers().remove(user);
+        doAsync(() -> {
+            storage.saveUser(user);
+            UserManager.getUsers().remove(user);
+        });
 
     }
 

@@ -4,7 +4,6 @@ import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserManager;
-
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,9 +15,10 @@ import java.util.Optional;
 import static me.angrypostman.freeforall.FreeForAll.doAsync;
 import static me.angrypostman.freeforall.FreeForAll.doSync;
 
-public class ResetStatsCommand implements CommandExecutor{
+public class ResetStatsCommand implements CommandExecutor {
 
     private FreeForAll plugin = null;
+
     public ResetStatsCommand(FreeForAll plugin) {
         this.plugin = plugin;
     }
@@ -33,15 +33,15 @@ public class ResetStatsCommand implements CommandExecutor{
             return true;
         }
 
-        if (!commandSender.hasPermission("freeforall.command.resetstats")){
-            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+        if (!commandSender.hasPermission("freeforall.command.resetstats")) {
+            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
         Player player = (Player) commandSender;
 
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED+"Correct Usage: /resetstats <player>");
+            player.sendMessage(ChatColor.RED + "Correct Usage: /resetstats <player>");
             return false;
         }
 
@@ -60,7 +60,7 @@ public class ResetStatsCommand implements CommandExecutor{
 
             plugin.getDataStorage().saveUser(user);
 
-            doSync(() -> player.sendMessage(ChatColor.GREEN+user.getName()+"'s stats have been reset."));
+            doSync(() -> player.sendMessage(ChatColor.GREEN + user.getName() + "'s stats have been reset."));
 
         });
 

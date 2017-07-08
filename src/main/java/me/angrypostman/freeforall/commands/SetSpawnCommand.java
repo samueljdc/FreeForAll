@@ -1,7 +1,6 @@
 package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
-
 import me.angrypostman.freeforall.data.DataStorage;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -17,6 +16,7 @@ public class SetSpawnCommand implements CommandExecutor {
 
     private FreeForAll plugin;
     private DataStorage dataStorage;
+
     public SetSpawnCommand(FreeForAll plugin) {
         this.plugin = plugin;
         this.dataStorage = plugin.getDataStorage();
@@ -33,7 +33,7 @@ public class SetSpawnCommand implements CommandExecutor {
         }
 
         if (!commandSender.hasPermission("freeforall.command.setspawn")) {
-            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
@@ -47,7 +47,7 @@ public class SetSpawnCommand implements CommandExecutor {
             dataStorage.saveLocation(playerLocation);
 
             doSync(() -> {
-                player.sendMessage(ChatColor.GREEN+"Spawn set!");
+                player.sendMessage(ChatColor.GREEN + "Spawn set!");
             });
 
         });

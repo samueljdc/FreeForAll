@@ -1,9 +1,7 @@
 package me.angrypostman.freeforall.statistics;
 
 import com.google.common.base.Preconditions;
-
 import me.angrypostman.freeforall.user.User;
-
 import org.bukkit.entity.Player;
 
 import java.util.Optional;

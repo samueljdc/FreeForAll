@@ -8,7 +8,8 @@ import java.util.concurrent.TimeUnit;
 public class Combat {
 
     private static Map<UUID, Damage> lastDamage = new HashMap<>();
-    private static List<UUID> invulnerables = new ArrayList<>();;
+    private static List<UUID> invulnerables = new ArrayList<>();
+    ;
 
     public static Damage getLastDamage(User user) {
         return lastDamage.get(Preconditions.checkNotNull(user).getPlayerUUID());

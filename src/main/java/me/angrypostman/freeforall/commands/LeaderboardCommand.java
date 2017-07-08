@@ -2,7 +2,6 @@ package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
-
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserData;
 import org.bukkit.ChatColor;
@@ -21,6 +20,7 @@ public class LeaderboardCommand implements CommandExecutor {
 
     private FreeForAll plugin = null;
     private DataStorage dataStorage;
+
     public LeaderboardCommand(FreeForAll plugin) {
         this.plugin = plugin;
         this.dataStorage = plugin.getDataStorage();
@@ -37,7 +37,7 @@ public class LeaderboardCommand implements CommandExecutor {
         }
 
         if (!commandSender.hasPermission("freeforall.command.leaderboard")) {
-            commandSender.sendMessage(ChatColor.RED+"You don't have permission to perform this command.");
+            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
             return true;
         }
 
@@ -48,7 +48,7 @@ public class LeaderboardCommand implements CommandExecutor {
             try {
                 page = Integer.parseInt(args[0]);
             } catch (NumberFormatException ex) {
-                player.sendMessage(ChatColor.RED+"Please enter a valid number.");
+                player.sendMessage(ChatColor.RED + "Please enter a valid page number.");
                 return false;
             }
         }
@@ -61,10 +61,12 @@ public class LeaderboardCommand implements CommandExecutor {
             doSync(() -> { //No point in running back to the main thread for each result, we already have the data
                 int counter = 1;
                 for (Iterator<User> iterator = leaderboard.iterator(); iterator.hasNext(); counter++) {
+
                     User user = iterator.next();
                     UserData data = user.getUserData();
 
-                    player.sendMessage(ChatColor.GOLD+""+counter+". "+user.getName()+" ("+data.getPoints()+" points)");
+                    player.sendMessage(ChatColor.GOLD + "" + counter + ". " + user.getName() + " (" + data.getPoints() + " points)");
+
                 }
             });
         });

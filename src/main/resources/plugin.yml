@@ -9,6 +9,7 @@ commands:
     resetstats:
     kit:
     savekit:
+    delkit:
     setspawn:
     delspawn:
     leaderboard:

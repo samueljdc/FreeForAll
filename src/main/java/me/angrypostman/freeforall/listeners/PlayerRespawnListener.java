@@ -6,11 +6,11 @@ import me.angrypostman.freeforall.kit.FFAKit;
 import me.angrypostman.freeforall.kit.KitManager;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
-
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
@@ -26,19 +26,20 @@ public class PlayerRespawnListener implements Listener {
 
     private FreeForAll plugin;
     private DataStorage dataStorage;
+
     public PlayerRespawnListener(FreeForAll plugin) {
         this.plugin = plugin;
         this.dataStorage = plugin.getDataStorage();
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerRespawn(PlayerRespawnEvent event) {
 
         Player player = event.getPlayer();
-        Optional<User> optional = UserManager.getUser(player);
+        Optional<User> optional = UserManager.getUserIfPresent(player);
 
         if (!optional.isPresent()) {
-            player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog.");
+            player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
             return;
         }
 

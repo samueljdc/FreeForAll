@@ -1,7 +1,6 @@
 package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
-
 import me.angrypostman.freeforall.FreeForAll;
 import org.bukkit.entity.Player;
 
@@ -12,8 +11,13 @@ import java.util.UUID;
 
 public class UserManager {
 
-    private static List<User> users = new ArrayList<>();
-    private static FreeForAll plugin = FreeForAll.getPlugin();
+    private static List<User> users = null;
+    private static FreeForAll plugin = null;
+
+    static {
+        users = new ArrayList<>();
+        plugin = FreeForAll.getPlugin();
+    }
 
     public static Optional<User> getUser(Player player) {
         Preconditions.checkNotNull(player.getUniqueId(), "uuid cannot be null");

@@ -3,15 +3,14 @@ package me.angrypostman.freeforall.listeners;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.*;
-
 import me.angrypostman.freeforall.util.PlayerUtils;
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Optional;
 
@@ -19,6 +18,7 @@ public class PlayerDeathListener implements Listener {
 
     private FreeForAll plugin = null;
     private DataStorage storage = null;
+
     public PlayerDeathListener(FreeForAll plugin) {
         this.plugin = plugin;
         this.storage = plugin.getDataStorage();
@@ -27,11 +27,23 @@ public class PlayerDeathListener implements Listener {
     @EventHandler
     public void onPlayerDeath(PlayerDeathEvent event) {
 
+        event.setDeathMessage(null);
+        event.setKeepInventory(false);
+        event.setKeepLevel(false);
+        event.setNewExp(0);
+        event.setNewLevel(0);
+        event.setNewTotalExp(0);
+        event.setDroppedExp(0);
+
         Player player = event.getEntity();
         Optional<User> optional = UserManager.getUserIfPresent(player);
 
+        PlayerInventory inventory = player.getInventory();
+        inventory.setArmorContents(null);
+        inventory.clear();
+
         if (!optional.isPresent()) { //This should NEVER happen
-            player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog");
+            player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog");
             return;
         }
 

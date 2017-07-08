@@ -1,12 +1,10 @@
 package me.angrypostman.freeforall.util;
 
 import me.angrypostman.freeforall.FreeForAll;
-import org.bukkit.WeatherType;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class Configuration {
@@ -70,17 +68,29 @@ public class Configuration {
         return (boolean) values.get("settings.combat.disablePlayerCollision");
     }
 
-    public boolean enablePvpLogger() { return (boolean) values.get("settings.combat.pvpLogger"); }
+    public boolean enablePvpLogger() {
+        return (boolean) values.get("settings.combat.pvpLogger");
+    }
 
-    public long pvpLoggerDuration() { return (long) values.get("settings.combat.pvpLoggerDuration") * 1000L; }
+    public long pvpLoggerDuration() {
+        return (long) values.get("settings.combat.pvpLoggerDuration") * 1000L;
+    }
 
-    public boolean disableWeather() { return (boolean) values.get("settings.world.disableWeather"); }
+    public boolean disableWeather() {
+        return (boolean) values.get("settings.world.disableWeather");
+    }
 
-    public boolean disablePlayerDrop() { return (boolean) values.get("settings.world.disablePlayerDrop"); }
+    public boolean disablePlayerDrop() {
+        return (boolean) values.get("settings.world.disablePlayerDrop");
+    }
 
-    public boolean disablePlayerPickup() { return (boolean) values.get("settings.world.disablePlayerPickup"); }
+    public boolean disablePlayerPickup() {
+        return (boolean) values.get("settings.world.disablePlayerPickup");
+    }
 
-    public boolean disableCreatures() { return (boolean) values.get("settings.world.disableCreatures"); }
+    public boolean disableCreatures() {
+        return (boolean) values.get("settings.world.disableCreatures");
+    }
 
     public double getVersion() {
         return (double) values.get("version");
