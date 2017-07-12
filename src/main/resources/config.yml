@@ -15,7 +15,14 @@ settings:
         disablePlayerCollision: true
         playerRespawnImmunity: 0
         pvpLogger: false
-        pvpLoggerDuration: 0
+        pvpLoggerDuration: 15
+        gainedLost: 20
+    world:
+        disableWeatherChange: false
+        disableBlockPlace: false
+        disableBlockDestroy: false
+        disableCreatureSpawn: true
+        disableExplosionDestroy: false
     defaultKit: "KIT_NAME_HERE"
 messages:
 version: 1.0

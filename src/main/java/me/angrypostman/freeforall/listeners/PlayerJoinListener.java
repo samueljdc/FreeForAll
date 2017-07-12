@@ -5,10 +5,13 @@ import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Optional;
 
@@ -32,6 +35,19 @@ public class PlayerJoinListener implements Listener {
             player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
             return;
         }
+
+        PlayerInventory inventory = player.getInventory();
+        inventory.clear();
+        inventory.setArmorContents(null);
+
+        player.setGameMode(GameMode.SURVIVAL);
+        player.setFoodLevel(20);
+        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+        player.setInvulnerable(false);
+        player.setFireTicks(0);
+        player.setLevel(0);
+        player.setExp(0);
+        player.setTotalExperience(0);
 
 
     }

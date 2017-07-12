@@ -11,6 +11,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
@@ -61,12 +63,28 @@ public class KitManager {
 
             }
 
+            List<PotionEffect> potionEffects = new ArrayList<>();
+            for (String potionEffect : section.getStringList(kit + ".potionEffects")) {
+
+                String[] parts = potionEffect.split(",");
+
+                PotionEffectType potionEffectType = PotionEffectType.getByName(parts[0]);
+                Integer duration = Integer.parseInt(parts[1]);
+                Integer amplifier = Integer.parseInt(parts[2]);
+
+                PotionEffect potion = new PotionEffect(potionEffectType, duration, amplifier);
+                potionEffects.add(potion);
+
+            }
+
             FFAKit ffaKit = new FFAKit(friendly, permission);
-            ffaKit.setHelmet(helmet);
-            ffaKit.setChestplate(chestplate);
-            ffaKit.setLeggings(leggings);
-            ffaKit.setBoots(boots);
+            if (helmet != null) ffaKit.setHelmet(helmet);
+            if (chestplate != null) ffaKit.setChestplate(chestplate);
+            if (leggings != null) ffaKit.setLeggings(leggings);
+            if (boots != null) ffaKit.setBoots(boots);
+
             ffaKit.setInventoryItems(deserialized);
+            ffaKit.setPotionEffects(potionEffects);
 
             kits.add(ffaKit);
 
@@ -86,11 +104,16 @@ public class KitManager {
     }
 
     public static Optional<FFAKit> getKit(String name) {
+        Preconditions.checkArgument(name != null && !name.isEmpty(), "kit name cannot be null or effectively null");
         return kits.stream().filter(kit -> kit.getName().equalsIgnoreCase(name)).findFirst();
     }
 
     public static Optional<FFAKit> getDefaultKit() {
-        return getKit(config.getDefaultKit());
+        String defaultKit = config.getDefaultKit();
+        if (defaultKit == null || defaultKit.isEmpty()) {
+            return Optional.empty();
+        }
+        return getKit(defaultKit);
     }
 
     public static void giveItems(User user, FFAKit kit) {
@@ -108,6 +131,8 @@ public class KitManager {
             return;
         }
 
+        player.getActivePotionEffects().forEach(potionEffect -> player.removePotionEffect(potionEffect.getType()));
+
         PlayerInventory inventory = player.getInventory();
         inventory.setArmorContents(null);
         inventory.clear();
@@ -118,6 +143,7 @@ public class KitManager {
         if (kit.getBoots() != null) inventory.setBoots(kit.getBoots());
 
         kit.getInventoryItems().forEach(inventory::addItem);
+        kit.getPotionEffects().forEach(player::addPotionEffect);
 
         playerKits.put(player.getUniqueId(), kit);
 
@@ -127,7 +153,7 @@ public class KitManager {
 
     public static void registerKit(FFAKit kit) {
         Preconditions.checkNotNull(kit, "kit");
-        Preconditions.checkArgument(getKit(kit.getName()) != null, "kit already defined");
+        Preconditions.checkArgument(getKit(kit.getName()) == null, "kit already defined");
         KitManager.kits.add(kit);
     }
 
@@ -141,17 +167,19 @@ public class KitManager {
 
         String lowerCase = kit.getName().toLowerCase();
 
-        config.set("kits." + lowerCase + ".friendly", kit.getName());
-        config.set("kits." + lowerCase + ".permission", kit.getPermission());
+        section.set(lowerCase + ".friendly", kit.getName());
+        section.set(lowerCase + ".permission", kit.getPermission());
 
-        if (kit.getHelmet() != null) config.set("kits." + lowerCase + ".helmet", kit.getHelmet().getType().name());
+        if (kit.getHelmet() != null)
+            section.set(lowerCase + ".helmet", kit.getHelmet().getType().name());
         if (kit.getChestplate() != null)
-            config.set("kits." + lowerCase + ".chestplate", kit.getChestplate().getType().name());
+            section.set(lowerCase + ".chestplate", kit.getChestplate().getType().name());
         if (kit.getLeggings() != null)
-            config.set("kits." + lowerCase + ".leggings", kit.getLeggings().getType().name());
-        if (kit.getBoots() != null) config.set("kits." + lowerCase + ".boots", kit.getBoots().getType().name());
+            section.set(lowerCase + ".leggings", kit.getLeggings().getType().name());
+        if (kit.getBoots() != null)
+            section.set(lowerCase + ".boots", kit.getBoots().getType().name());
 
-        List<String> serialized = new ArrayList<>();
+        List<String> serializedStacks = new ArrayList<>();
         for (ItemStack stack : kit.getInventoryItems()) {
             if (stack == null || stack.getType() == Material.AIR) continue;
 
@@ -162,11 +190,24 @@ public class KitManager {
             Integer amount = stack.getAmount();
 
             String newStack = name + "," + data + "," + amount;
-            serialized.add(newStack);
+            serializedStacks.add(newStack);
 
         }
 
-        config.set("kits." + lowerCase + ".contents", serialized);
+        List<String> seralizedPotions = new ArrayList<>();
+        for (PotionEffect potionEffect : kit.getPotionEffects()) {
+
+            PotionEffectType potionEffectType = potionEffect.getType();
+            Integer duration = potionEffect.getDuration();
+            Integer amplifier = potionEffect.getAmplifier();
+
+            String serializedPotion = potionEffectType.getName() + "," + duration + "," + amplifier;
+            seralizedPotions.add(serializedPotion);
+
+        }
+
+        section.set(lowerCase + ".contents", serializedStacks);
+        section.set(lowerCase + ".potionEffects", seralizedPotions);
         plugin.saveConfig();
 
     }
@@ -176,6 +217,8 @@ public class KitManager {
     }
 
     public static void deleteKit(FFAKit kit) {
+
+        Preconditions.checkNotNull(kit, "cannot delete an unknown kit");
 
         FileConfiguration config = plugin.getConfig();
         ConfigurationSection section = config.getConfigurationSection("kits");

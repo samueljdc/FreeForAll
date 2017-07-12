@@ -12,10 +12,11 @@ public class Statistic {
     private String friendlyName;
     private String description;
 
-    public Statistic(String name, String friendlyName, String description) {
+    private int defaultValue;
+
+    public Statistic(String name, String friendlyName) {
         this.name = name;
         this.friendlyName = friendlyName;
-        this.description = description;
     }
 
     public String getName() {
@@ -28,6 +29,18 @@ public class Statistic {
 
     public String getDescription() {
         return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public int getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(int defaultValue) {
+        this.defaultValue = defaultValue;
     }
 
     public Optional<StatValue> getValue(Player player) {

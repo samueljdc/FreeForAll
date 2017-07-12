@@ -8,9 +8,11 @@ import me.angrypostman.freeforall.data.SQLiteStorage;
 import me.angrypostman.freeforall.data.YamlStorage;
 import me.angrypostman.freeforall.kit.KitManager;
 import me.angrypostman.freeforall.listeners.*;
+import me.angrypostman.freeforall.runnables.UpdaterTask;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
 import me.angrypostman.freeforall.util.Configuration;
+import me.angrypostman.freeforall.util.Updater;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -19,12 +21,12 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.permissions.ServerOperator;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -32,16 +34,10 @@ public class FreeForAll extends JavaPlugin {
 
     /*
          1. Data Storage > SQLite and YML data storage implementation
-         3. Commands > Del spawn
-         4. EntityDamageListener > Spawned creatures that attack a player still trigger the combat tag
-         5. PlayerDeathListener > Reward killer (increment points, kills, killStreak, anything else?), subtract
-         points from the killed user, end kill streak, anything else?
          6. PlayerJoinListener > Not sure yet
          7. PlayerQuitListener > Calculate lost points, other stuff
-         8. PlayerMoveListener > Not sure yet (boundaries for the arena ?)
-         9. Implement stats (arrows shot, neutral monsters killed, etc) at some point, probably
+         9. Implement stats (arrows shot, monsters killed, etc) at some point, probably
          after initial release
-         10. Kits > Load kits,
          11. Optional chat formatting at some point (after release)
          12. Implement player ranking
          15. Implement customizable messages
@@ -53,34 +49,94 @@ public class FreeForAll extends JavaPlugin {
     private DataStorage dataStorage = null;
     private Configuration configuration = null;
 
+    private List<BukkitRunnable> runnables = new ArrayList<>();
+
     public static FreeForAll getPlugin() {
         return plugin;
     }
 
     public static void doAsync(Runnable runnable) {
-        plugin.getServer().getScheduler().runTaskAsynchronously(plugin, runnable);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+            }
+        };
+        bukkitRunnable.runTaskAsynchronously(plugin);
     }
 
     public static void doAsyncLater(Runnable runnable, long ticksLater) {
-        plugin.getServer().getScheduler().runTaskLaterAsynchronously(plugin, runnable, ticksLater);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+
+                //Make sure that the task gets cancelled no matter what
+                //This should work (I hope)
+                plugin.cancelTask(this.getTaskId());
+            }
+        };
+        plugin.getRunnables().add(bukkitRunnable);
+        bukkitRunnable.runTaskLaterAsynchronously(plugin, ticksLater);
     }
 
     public static void doAsyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        plugin.getServer().getScheduler().runTaskTimerAsynchronously(plugin, runnable,
-                startAfterTicks, repeatDelayTicks);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+            }
+        };
+        plugin.getRunnables().add(bukkitRunnable);
+        bukkitRunnable.runTaskTimerAsynchronously(plugin, startAfterTicks, repeatDelayTicks);
     }
 
     public static void doSync(Runnable runnable) {
-        plugin.getServer().getScheduler().runTask(plugin, runnable);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+            }
+        };
+        bukkitRunnable.runTask(plugin);
     }
 
     public static void doSyncLater(Runnable runnable, long ticksLater) {
-        plugin.getServer().getScheduler().runTaskLater(plugin, runnable, ticksLater);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+
+                //Make sure that the task gets cancelled no matter what
+                //This should work (I hope)
+                plugin.cancelTask(this.getTaskId());
+            }
+        };
+        plugin.getRunnables().add(bukkitRunnable);
+        bukkitRunnable.runTaskLater(plugin, ticksLater);
     }
 
     public static void doSyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks) {
-        plugin.getServer().getScheduler().runTaskTimer(plugin, runnable,
-                startAfterTicks, repeatDelayTicks);
+        BukkitRunnable bukkitRunnable = new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    runnable.run();
+                } catch (Exception ignored) {}
+            }
+        };
+        plugin.getRunnables().add(bukkitRunnable);
+        bukkitRunnable.runTaskTimer(plugin, startAfterTicks, repeatDelayTicks);
     }
 
     public DataStorage getDataStorage() {
@@ -93,6 +149,7 @@ public class FreeForAll extends JavaPlugin {
         plugin = this;
 
         getLogger().info("Performing plugin startup procedure...");
+        getLogger().info("Checking for configuration file in plugin data folder...");
         if (!new File(getDataFolder(), "config.yml").exists()) {
             getLogger().info("Failed to find configuration, saving default config...");
             saveDefaultConfig();
@@ -109,15 +166,36 @@ public class FreeForAll extends JavaPlugin {
         }
 
         getLogger().info("Loading configuration values...");
-
         configuration = new Configuration(this);
         configuration.load();
 
+        getLogger().info("Checking for available updates...");
+        Updater updater = new Updater(this);
+        try {
+            updater.checkUpdate("v" + getConfiguration().getVersion());
+
+            String latestVersion = updater.getLatestVersion();
+            if (latestVersion != null) {
+                getLogger().info("A new version of FreeForAll is available for download!");
+            } else {
+                getLogger().info("FreeForAll is up to date (currently running v" + configuration.getVersion() + ")");
+            }
+
+            //Check again for any future updates every 6 hours
+            //60 seconds, * 60 = 60 minutes * 6 = 6 hours * 20 (20 ticks in 1 second)
+            new UpdaterTask(this).runTaskTimerAsynchronously(this, 60 * 60 * 6 * 20, 60 * 60 * 6 * 20);
+        } catch (IOException ex) {
+            getLogger().info("An error occurred whilst checking for updates.");
+            getLogger().info("Message: " + ex.getMessage());
+        }
+
         String storageMethod = configuration.getStorageMethod();
         if (storageMethod.equalsIgnoreCase("yaml") || storageMethod.equalsIgnoreCase("yml")) {
+            getLogger().info("This plugin is setup using the YAML storage method, retrieving YAML data file...");
             File file = configuration.getYAMLDataFile();
             dataStorage = new YamlStorage(this, file);
         } else if (storageMethod.equalsIgnoreCase("mysql")) {
+            getLogger().info("This plugin is setup using the MYSQL storage method, retrieving MySQL details...");
             String host = configuration.getSQLHost();
             String database = configuration.getSQLDatabase();
             String username = configuration.getSQLUser();
@@ -125,6 +203,7 @@ public class FreeForAll extends JavaPlugin {
             Integer port = configuration.getSQLPort();
             dataStorage = new MySQLStorage(this, host, database, username, password, port);
         } else if (storageMethod.equalsIgnoreCase("sqlite")) {
+            getLogger().info("This plugin is setup using the SQLITE storage method (flat file), retrieving SQLITE data file...");
             File file = configuration.getSQLiteDataFile();
             dataStorage = new SQLiteStorage(this, file);
         } else {
@@ -134,9 +213,9 @@ public class FreeForAll extends JavaPlugin {
             return;
         }
 
-        getLogger().info("Initializing data storage with storage method \"" + storageMethod.toUpperCase() + "\"...");
+        getLogger().info("Initializing plugin data storage...");
         if (!dataStorage.initialize()) {
-            String message = "Failed to initialize data storage, please check the logs for further details.";
+            String message = "Failed to initialize plugin data storage, please check the logs for further details.";
             getServer().getOnlinePlayers().stream().filter(ServerOperator::isOp).forEach(player -> player.sendMessage("[FreeForAll] " + message));
             getPluginLoader().disablePlugin(this);
             return;
@@ -153,7 +232,7 @@ public class FreeForAll extends JavaPlugin {
         manager.registerEvents(new PlayerRespawnListener(this), this);
         manager.registerEvents(new EnvironmentListeners(this), this);
 
-        getLogger().info("Event listeners registered!");
+        getLogger().info("FreeForAll is currently listening to "+HandlerList.getRegisteredListeners(this).size()+" events!");
 
         getLogger().info("Registering commands...");
 
@@ -225,6 +304,11 @@ public class FreeForAll extends JavaPlugin {
             //startAfterTicks = 60 * 10 * 20 (10 minutes), repeatDelayTicks = 60 * 10 * 20 (10 minutes)
         }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
 
+        //Update the version number in the config.yml because anything we need
+        //to do with this being outdated would have been already done
+//        configuration.set("version", getDescription().getVersion());
+//        configuration.saveConfiguration();
+
         getLogger().info("Plugin startup procedure complete!");
 
     }
@@ -235,7 +319,13 @@ public class FreeForAll extends JavaPlugin {
         if (dataStorage != null) dataStorage.close();
         if (configuration != null) configuration.unload();
 
+        getLogger().info("Shutting down "+runnables.size()+" Bukkit tasks...");
+        this.getRunnables().forEach(BukkitRunnable::run);
+
+
         getServer().getScheduler().cancelTasks(this);
+
+        getLogger().info("Un-registering event listeners...");
         HandlerList.unregisterAll(this);
 
         plugin = null;
@@ -247,7 +337,22 @@ public class FreeForAll extends JavaPlugin {
         return configuration;
     }
 
+    public void cancelTask(int taskId) {
+        for (BukkitRunnable runnable : getRunnables()) {
+            if (runnable.getTaskId() == taskId) {
+                runnables.remove(runnable);
+            }
+        }
+    }
+
+    public List<BukkitRunnable> getRunnables() {
+        return runnables;
+    }
+
     private void syncConfig(ConfigurationSection from, ConfigurationSection to) {
-        from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey)).forEachOrdered(fromKey -> to.set(fromKey, from.get(fromKey)));
+        from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey)).forEachOrdered(fromKey -> {
+            to.set(fromKey, from.get(fromKey));
+            getLogger().info("CREATING CONFIGURATION KEY "+fromKey+" WITH VALUE "+from.get(fromKey));
+        });
     }
 }

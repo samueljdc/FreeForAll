@@ -33,7 +33,7 @@ public class StatisticsManager {
     public static void registerStatistic(Statistic statistic) {
         Preconditions.checkNotNull(statistic, "statistic");
         Preconditions.checkArgument(!isRegistered(statistic), "statistic already registered");
-        statistics.add(statistic);
+        StatisticsManager.statistics.add(statistic);
     }
 
     private static boolean isRegistered(Statistic statistic) {

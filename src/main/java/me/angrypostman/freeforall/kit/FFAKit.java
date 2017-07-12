@@ -2,6 +2,7 @@ package me.angrypostman.freeforall.kit;
 
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
 
 import java.util.List;
 
@@ -18,6 +19,7 @@ public class FFAKit {
     private boolean isDefault = false;
 
     private List<ItemStack> inventoryItems = null;
+    private List<PotionEffect> potionEffects = null;
 
     public FFAKit(String name, String permission) {
         this.name = name;
@@ -90,6 +92,14 @@ public class FFAKit {
 
     public void setInventoryItems(List<ItemStack> inventoryItems) {
         this.inventoryItems = inventoryItems;
+    }
+
+    public List<PotionEffect> getPotionEffects() {
+        return potionEffects;
+    }
+
+    public void setPotionEffects(List<PotionEffect> potionEffects) {
+        this.potionEffects = potionEffects;
     }
 
     public boolean isDefault() {

@@ -18,7 +18,6 @@ public class KitCommand implements CommandExecutor {
 
     private FreeForAll plugin = null;
     private DataStorage storage = null;
-
     public KitCommand(FreeForAll plugin) {
         this.plugin = plugin;
         this.storage = plugin.getDataStorage();
@@ -50,7 +49,7 @@ public class KitCommand implements CommandExecutor {
         User user = userOptional.get();
 
         if (args.length < 1) {
-            player.sendMessage(ChatColor.RED + "Correct usage: /delkit <name>");
+            player.sendMessage(ChatColor.RED + "Correct usage: /kit <name>");
             return false;
         }
 

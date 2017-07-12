@@ -6,6 +6,7 @@ import me.angrypostman.freeforall.user.Combat;
 import me.angrypostman.freeforall.user.Damage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserManager;
+import me.angrypostman.freeforall.util.Configuration;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -17,10 +18,11 @@ import java.util.Optional;
 public class EntityDamageListener implements Listener {
 
     private FreeForAll plugin = null;
+    private Configuration config = null;
     private DataStorage storage = null;
-
     public EntityDamageListener(FreeForAll plugin) {
         this.plugin = plugin;
+        this.config = plugin.getConfiguration();
         this.storage = plugin.getDataStorage();
     }
 
@@ -37,7 +39,7 @@ public class EntityDamageListener implements Listener {
         User user = optional.get();
 
         double finalDamage = event.getFinalDamage();
-        if (event.isCancelled() || finalDamage == 0) return;
+        if (config.disablePVPLogger() || event.isCancelled() || finalDamage == 0) return;
 
         if (event instanceof EntityDamageByEntityEvent) {
 
@@ -62,7 +64,9 @@ public class EntityDamageListener implements Listener {
                 }
             } else if (damager instanceof Tameable) {
                 Tameable tameable = (Tameable) damager;
-                if (tameable.getOwner() != null && tameable.getOwner() instanceof Player) {
+                if (tameable.getOwner() != null
+                        && tameable.getOwner() instanceof Player
+                        && !tameable.getOwner().getUniqueId().equals(player.getUniqueId())) {
                     attacker = UserManager.getUserIfPresent(tameable.getOwner().getUniqueId());
                 }
             }

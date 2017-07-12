@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.potion.PotionEffect;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +77,13 @@ public class SaveKitCommand implements CommandExecutor {
             inventoryItems.add(stack);
         }
 
+        List<PotionEffect> potionEffects = new ArrayList<>();
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            potionEffects.add(effect);
+        }
+
         kit.setInventoryItems(inventoryItems);
+        kit.setPotionEffects(potionEffects);
         KitManager.registerKit(kit);
         KitManager.saveKit(kit);
 

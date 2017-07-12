@@ -50,7 +50,7 @@ public class SQLiteStorage extends DataStorage {
     }
 
     @Override
-    public List<User> getLeardboardTop(int page) {
+    public List<User> getLeaderboardTop(int page) {
         return null;
     }
 

@@ -57,7 +57,7 @@ public class LeaderboardCommand implements CommandExecutor {
 
         int finalPage = page;
         doAsync(() -> { //Have to go out of the main thread as getLeaderboardTop will (may) call MySQL
-            List<User> leaderboard = dataStorage.getLeardboardTop(finalPage);
+            List<User> leaderboard = dataStorage.getLeaderboardTop(finalPage);
             doSync(() -> { //No point in running back to the main thread for each result, we already have the data
                 int counter = 1;
                 for (Iterator<User> iterator = leaderboard.iterator(); iterator.hasNext(); counter++) {

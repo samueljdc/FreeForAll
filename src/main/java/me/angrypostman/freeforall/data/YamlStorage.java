@@ -36,10 +36,12 @@ public class YamlStorage extends DataStorage {
 
         if (!getFile().exists()) {
             try {
-                getFile().createNewFile();
+                if (file.getParentFile() != null) {
+                    file.getParentFile().mkdirs();
+                }
+                file.createNewFile();
             } catch (IOException e) {
                 e.printStackTrace();
-                return false;
             }
         }
 
@@ -79,7 +81,7 @@ public class YamlStorage extends DataStorage {
     }
 
     @Override
-    public List<User> getLeardboardTop(int page) {
+    public List<User> getLeaderboardTop(int page) {
         return null;
     }
 

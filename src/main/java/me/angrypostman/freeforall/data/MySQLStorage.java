@@ -130,7 +130,6 @@ public class MySQLStorage extends DataStorage {
                 }
 
                 this.locations.addAll(locations);
-                plugin.getLogger().info("Loaded "+this.locations.size()+" spawn points.");
 
             }
 
@@ -169,6 +168,8 @@ public class MySQLStorage extends DataStorage {
     @Override
     public void close() {
 
+        plugin.getLogger().info("Performing DataStorage shutdown...");
+        plugin.getLogger().info("Saving user data of "+plugin.getServer().getOnlinePlayers().size()+" players...");
         Iterator<User> iterator = UserManager.getUsers().iterator();
         while (iterator.hasNext()) {
             User user = iterator.next();
@@ -176,9 +177,11 @@ public class MySQLStorage extends DataStorage {
             iterator.remove();
         }
 
+        plugin.getLogger().info("Shutting down connection pool...");
         if (dataSource != null && !dataSource.isClosed()) {
             dataSource.close();
         }
+        plugin.getLogger().info("DataStorage shutdown complete!");
     }
 
     @Override
@@ -309,7 +312,7 @@ public class MySQLStorage extends DataStorage {
         Preconditions.checkArgument(lookupName != null && !lookupName.isEmpty(), "lookupName cannot be null or effectively null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
-        Optional<User> tempUser = UserManager.getUser(lookupName);
+        Optional<User> tempUser = UserManager.getUserIfPresent(lookupName);
         if (tempUser.isPresent()) return tempUser;
 
         Connection connection = null;
@@ -418,7 +421,7 @@ public class MySQLStorage extends DataStorage {
     }
 
     @Override
-    public List<User> getLeardboardTop(int page) {
+    public List<User> getLeaderboardTop(int page) {
 
         List<User> leaderboard = new ArrayList<>();
 

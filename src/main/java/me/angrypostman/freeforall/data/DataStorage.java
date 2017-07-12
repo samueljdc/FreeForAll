@@ -21,7 +21,7 @@ public abstract class DataStorage {
 
     public abstract void saveUser(User user);
 
-    public abstract List<User> getLeardboardTop(int page);
+    public abstract List<User> getLeaderboardTop(int page);
 
     public abstract void saveLocation(Location location);
 

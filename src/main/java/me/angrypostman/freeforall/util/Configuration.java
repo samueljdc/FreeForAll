@@ -1,6 +1,7 @@
 package me.angrypostman.freeforall.util;
 
 import me.angrypostman.freeforall.FreeForAll;
+import org.bukkit.WeatherType;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -26,7 +27,7 @@ public class Configuration {
 
         values.clear();
 
-        values.put("storage.method", configuration.getString("storage.storageMethod"));
+        values.put("storage.storageMethod", configuration.getString("storage.storageMethod"));
         values.put("storage.yaml.dataFile", configuration.getString("storage.yaml.dataFile"));
         values.put("storage.mysql.host", configuration.getString("storage.mysql.host"));
         values.put("storage.mysql.database", configuration.getString("storage.mysql.database"));
@@ -38,18 +39,26 @@ public class Configuration {
         values.put("settings.combat.playerRespawnImmunity", configuration.getInt("settings.combat.playerRespawnImmunity"));
         values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
         values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
+        values.put("settings.combat.gainedLost", configuration.getInt("settings.combat.gainedLost"));
+        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
+        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
+        values.put("settings.world.disableBlockDestroy", configuration.getBoolean("settings.world.disableBlockDestroy"));
+        values.put("settings.world.disableCreatureSpawn", configuration.getBoolean("settings.world.disableCreatureSpawn"));
+        values.put("settings.world.disableExplosionDestroy", configuration.getBoolean("settings.world.disableExplosionDestroy"));
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
-        values.put("version", configuration.getDouble("version"));
+        values.put("version", configuration.getString("version"));
 
     }
 
-    public void save() {
+    public void saveConfiguration() {
         values.forEach((entry, value) -> configuration.set(entry, value));
         plugin.saveConfig();
     }
 
     public void unload() {
-        values.clear();
+//        plugin.getLogger().info("Unloading configuration values from memory...");
+//        values.clear();
+//        plugin.getLogger().info("Configuration values unloaded from system memory...");
     }
 
     public Object get(String path) {
@@ -64,9 +73,38 @@ public class Configuration {
         return (String) values.get("settings.defaultKit");
     }
 
+    public boolean disablePVPLogger() {
+        return (!(boolean)values.get("settings.combat.pvpLogger"));
+    }
+
+    public boolean disableWeatherChange() {
+        return (boolean) values.get("settings.world.disableWeatherChange");
+    }
+
+    public WeatherType getDefaultWeatherType() {
+        return (WeatherType)values.get("settings.world.defaultWeatherType");
+    }
+
+    public boolean disableBlockPlace() {
+        return (boolean)values.get("settings.world.disableBlockPlace");
+    }
+
+    public boolean disableBlockDestroy() {
+        return (boolean)values.get("settings.world.disableBlockDestroy");
+    }
+
+    public boolean disableCreatureSpawn() {
+        return (boolean)values.get("settings.world.disableCreatureSpawn");
+    }
+
+    public boolean disableExplosionDestroy() {
+        return (boolean) values.get("settings.world.disableExplosionDestroy");
+    }
+
     public boolean disablePlayerCollision() {
         return (boolean) values.get("settings.combat.disablePlayerCollision");
     }
+
 
     public boolean enablePvpLogger() {
         return (boolean) values.get("settings.combat.pvpLogger");
@@ -76,28 +114,16 @@ public class Configuration {
         return (long) values.get("settings.combat.pvpLoggerDuration") * 1000L;
     }
 
-    public boolean disableWeather() {
-        return (boolean) values.get("settings.world.disableWeather");
+    public int getGainedLost() {
+        return (int) values.get("settings.combat.gainedLost");
     }
 
-    public boolean disablePlayerDrop() {
-        return (boolean) values.get("settings.world.disablePlayerDrop");
-    }
-
-    public boolean disablePlayerPickup() {
-        return (boolean) values.get("settings.world.disablePlayerPickup");
-    }
-
-    public boolean disableCreatures() {
-        return (boolean) values.get("settings.world.disableCreatures");
-    }
-
-    public double getVersion() {
-        return (double) values.get("version");
+    public String getVersion() {
+        return (String) values.get("version");
     }
 
     public String getStorageMethod() {
-        return (String) values.get("storage.method");
+        return (String) values.get("storage.storageMethod");
     }
 
     public File getYAMLDataFile() {

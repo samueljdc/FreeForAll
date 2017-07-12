@@ -1,5 +1,6 @@
 package me.angrypostman.freeforall.user;
 
+import com.google.common.collect.Maps;
 import me.angrypostman.freeforall.FreeForAll;
 import org.bukkit.entity.Player;
 
@@ -24,7 +25,7 @@ public class User {
         this.playerId = playerId;
         this.playerUUID = playerUUID;
         this.name = name;
-        this.userData = new UserData(kills, deaths, points/*, Maps.newHashMap()*/);
+        this.userData = new UserData(kills, deaths, points, Maps.newHashMap());
         this.downloadTime = System.currentTimeMillis();
         this.plugin = FreeForAll.getPlugin();
     }

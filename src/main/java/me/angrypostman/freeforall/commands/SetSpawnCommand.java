@@ -46,9 +46,7 @@ public class SetSpawnCommand implements CommandExecutor {
 
             dataStorage.saveLocation(playerLocation);
 
-            doSync(() -> {
-                player.sendMessage(ChatColor.GREEN + "Spawn set!");
-            });
+            doSync(() -> player.sendMessage(ChatColor.GREEN + "Spawn set!"));
 
         });
 
