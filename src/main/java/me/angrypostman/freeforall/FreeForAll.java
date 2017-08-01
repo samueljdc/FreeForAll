@@ -156,8 +156,6 @@ public class FreeForAll extends JavaPlugin {
             saveDefaultConfig();
         }
 
-        getConfig();
-
         getLogger().info("Validating configuration file...");
         try {
             YamlConfiguration config = new YamlConfiguration();
