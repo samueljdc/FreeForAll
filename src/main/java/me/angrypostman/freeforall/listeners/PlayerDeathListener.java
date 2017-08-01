@@ -66,6 +66,8 @@ public class PlayerDeathListener implements Listener {
 
             UserData killerData = killer.getUserData();
 
+            //Need a better method for calculating gained/lost,
+            //Might use optional percentages or something
             int playerPoints = userData.getPoints();
 
             int gained = configuration.getGainedLost();

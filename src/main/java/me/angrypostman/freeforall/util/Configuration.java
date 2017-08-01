@@ -1,7 +1,6 @@
 package me.angrypostman.freeforall.util;
 
 import me.angrypostman.freeforall.FreeForAll;
-import org.bukkit.WeatherType;
 import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
@@ -40,11 +39,11 @@ public class Configuration {
         values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
         values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
         values.put("settings.combat.gainedLost", configuration.getInt("settings.combat.gainedLost"));
-        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
-        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
-        values.put("settings.world.disableBlockDestroy", configuration.getBoolean("settings.world.disableBlockDestroy"));
-        values.put("settings.world.disableCreatureSpawn", configuration.getBoolean("settings.world.disableCreatureSpawn"));
-        values.put("settings.world.disableExplosionDestroy", configuration.getBoolean("settings.world.disableExplosionDestroy"));
+//        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
+//        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
+//        values.put("settings.world.disableBlockDestroy", configuration.getBoolean("settings.world.disableBlockDestroy"));
+//        values.put("settings.world.disableCreatureSpawn", configuration.getBoolean("settings.world.disableCreatureSpawn"));
+//        values.put("settings.world.disableExplosionDestroy", configuration.getBoolean("settings.world.disableExplosionDestroy"));
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
         values.put("version", configuration.getString("version"));
 
@@ -79,10 +78,6 @@ public class Configuration {
 
     public boolean disableWeatherChange() {
         return (boolean) values.get("settings.world.disableWeatherChange");
-    }
-
-    public WeatherType getDefaultWeatherType() {
-        return (WeatherType)values.get("settings.world.defaultWeatherType");
     }
 
     public boolean disableBlockPlace() {

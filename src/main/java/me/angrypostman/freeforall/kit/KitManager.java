@@ -49,7 +49,7 @@ public class KitManager {
             Material leggings = Material.getMaterial(section.getString(kit + ".leggings"));
             Material boots = Material.getMaterial(section.getString(kit + ".boots"));
 
-            List<ItemStack> deserialized = new ArrayList<>();
+            List<ItemStack> itemStacks = new ArrayList<>();
             for (String stack : section.getStringList(kit + ".contents")) {
 
                 String[] parts = stack.split(",");
@@ -59,7 +59,7 @@ public class KitManager {
                 Integer amount = Integer.parseInt(parts[2]);
 
                 ItemStack itemStack = new ItemStack(material.getId(), amount, (short) 1, data);
-                deserialized.add(itemStack);
+                itemStacks.add(itemStack);
 
             }
 
@@ -83,7 +83,7 @@ public class KitManager {
             if (leggings != null) ffaKit.setLeggings(leggings);
             if (boots != null) ffaKit.setBoots(boots);
 
-            ffaKit.setInventoryItems(deserialized);
+            ffaKit.setInventoryItems(itemStacks);
             ffaKit.setPotionEffects(potionEffects);
 
             kits.add(ffaKit);
