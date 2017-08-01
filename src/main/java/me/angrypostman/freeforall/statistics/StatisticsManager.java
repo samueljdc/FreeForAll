@@ -2,7 +2,6 @@ package me.angrypostman.freeforall.statistics;
 
 import com.google.common.base.Preconditions;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
 
 import java.util.*;
 
@@ -25,7 +24,6 @@ public class StatisticsManager {
         Preconditions.checkNotNull(player, "player cannot be null");
         Preconditions.checkNotNull(statistic, "statistic cannot be null");
         Preconditions.checkArgument(player.isOnline(), "player not online");
-        player.hasPermission(new Permission(""));
         return playerStats.entrySet().stream()
                 .filter(entry -> entry.getKey().equals(player.getUniqueId()))
                 .flatMap(entry -> entry.getValue().stream())

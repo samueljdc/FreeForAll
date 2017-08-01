@@ -255,7 +255,6 @@ public class FreeForAll extends JavaPlugin {
         getLogger().info("Registering commands...");
 
         //Might convert to using custom command handler at some point,
-        getCommand("").setExecutor(null);
         getCommand("stats").setExecutor(new StatsCommand(this));
         getCommand("resetstats").setExecutor(new ResetStatsCommand(this));
         getCommand("kit").setExecutor(new KitCommand(this));
