@@ -5,24 +5,25 @@ import org.bukkit.configuration.file.FileConfiguration;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class Configuration {
+public class Configuration{
 
-    private FreeForAll plugin = null;
-    private FileConfiguration configuration = null;
-    private Map<String, Object> values = new HashMap<>();
+    private FreeForAll plugin=null;
+    private FileConfiguration configuration=null;
+    private Map<String, Object> values=new HashMap<>();
 
-    public Configuration(FreeForAll plugin) {
-        this.plugin = plugin;
-        this.configuration = plugin.getConfig();
+    public Configuration(FreeForAll plugin){
+        this.plugin=plugin;
+        this.configuration=plugin.getConfig();
     }
 
-    public FileConfiguration getFileConfiguration() {
+    public FileConfiguration getFileConfiguration(){
         return configuration;
     }
 
-    public void load() {
+    public void load(){
 
         values.clear();
 
@@ -34,119 +35,97 @@ public class Configuration {
         values.put("storage.mysql.password", configuration.getString("storage.mysql.password"));
         values.put("storage.mysql.port", configuration.getInt("storage.mysql.port"));
         values.put("storage.sqlite.dataFile", configuration.getString("storage.sqlite.dataFile"));
-        values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
-        values.put("settings.combat.playerRespawnImmunity", configuration.getInt("settings.combat.playerRespawnImmunity"));
+
         values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
+        values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
         values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
-        values.put("settings.combat.gainedLost", configuration.getInt("settings.combat.gainedLost"));
+        values.put("settings.combat.gainedLost", configuration.getString("settings.combat.gainedLost"));
+
+        values.put("settings.combat.bannedCommands", configuration.getStringList("settings.combat.bannedCommands"));
+
 //        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
 //        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
 //        values.put("settings.world.disableBlockDestroy", configuration.getBoolean("settings.world.disableBlockDestroy"));
 //        values.put("settings.world.disableCreatureSpawn", configuration.getBoolean("settings.world.disableCreatureSpawn"));
 //        values.put("settings.world.disableExplosionDestroy", configuration.getBoolean("settings.world.disableExplosionDestroy"));
+
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
         values.put("version", configuration.getString("version"));
 
     }
 
-    public void saveConfiguration() {
+    public void saveConfiguration(){
         values.forEach((entry, value) -> configuration.set(entry, value));
         plugin.saveConfig();
     }
 
-    public void unload() {
-//        plugin.getLogger().info("Unloading configuration values from memory...");
-//        values.clear();
-//        plugin.getLogger().info("Configuration values unloaded from system memory...");
+    public void unload(){
+        values.clear();
     }
 
-    public Object get(String path) {
+    public Object get(String path){
         return values.get(path);
     }
 
-    public void set(String path, Object value) {
+    public void set(String path, Object value){
         values.put(path, value);
     }
 
-    public String getDefaultKit() {
+    public String getDefaultKit(){
         return (String) values.get("settings.defaultKit");
     }
 
-    public boolean disablePVPLogger() {
-        return (!(boolean)values.get("settings.combat.pvpLogger"));
+    public boolean isPvPLogger(){
+        return getPvPLoggerDuration()>0;
     }
 
-    public boolean disableWeatherChange() {
-        return (boolean) values.get("settings.world.disableWeatherChange");
+    public int getPvPLoggerDuration(){
+        return (int) values.get("settings.combat.pvpLoggerDuration");
     }
 
-    public boolean disableBlockPlace() {
-        return (boolean)values.get("settings.world.disableBlockPlace");
+    public String getGainedLost(){
+        return (String)values.get("settings.combat.gainedLost");
     }
 
-    public boolean disableBlockDestroy() {
-        return (boolean)values.get("settings.world.disableBlockDestroy");
+    public List<String> getBannedCommands(){
+        return (List<String>) values.get("settings.combat.bannedCommands");
     }
 
-    public boolean disableCreatureSpawn() {
-        return (boolean)values.get("settings.world.disableCreatureSpawn");
-    }
-
-    public boolean disableExplosionDestroy() {
-        return (boolean) values.get("settings.world.disableExplosionDestroy");
-    }
-
-    public boolean disablePlayerCollision() {
-        return (boolean) values.get("settings.combat.disablePlayerCollision");
-    }
-
-
-    public boolean enablePvpLogger() {
-        return (boolean) values.get("settings.combat.pvpLogger");
-    }
-
-    public long pvpLoggerDuration() {
-        return (long) values.get("settings.combat.pvpLoggerDuration") * 1000L;
-    }
-
-    public int getGainedLost() {
-        return (int) values.get("settings.combat.gainedLost");
-    }
-
-    public String getVersion() {
+    public String getVersion(){
         return (String) values.get("version");
     }
 
-    public String getStorageMethod() {
+    public String getStorageMethod(){
         return (String) values.get("storage.storageMethod");
     }
 
-    public File getYAMLDataFile() {
+    public File getYAMLDataFile(){
         return new File(plugin.getDataFolder(), (String) values.get("storage.yaml.dataFile"));
     }
 
-    public String getSQLHost() {
+    public String getSQLHost(){
         return (String) values.get("storage.mysql.host");
     }
 
-    public String getSQLDatabase() {
+    public String getSQLDatabase(){
         return (String) values.get("storage.mysql.database");
     }
 
-    public String getSQLUser() {
+    public String getSQLUser(){
         return (String) values.get("storage.mysql.username");
     }
 
-    public String getSQLPassword() {
+    public String getSQLPassword(){
         return (String) values.get("storage.mysql.password");
     }
 
-    public int getSQLPort() {
+    public int getSQLPort(){
         return (int) values.get("storage.mysql.port");
     }
 
-    public File getSQLiteDataFile() {
+    public File getSQLiteDataFile(){
         return new File(plugin.getDataFolder(), (String) values.get("storage.sqlite.dataFile"));
     }
+
 
 }

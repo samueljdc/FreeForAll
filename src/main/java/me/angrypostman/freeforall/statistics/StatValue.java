@@ -1,43 +1,36 @@
 package me.angrypostman.freeforall.statistics;
 
-import com.google.common.base.Preconditions;
 import me.angrypostman.freeforall.user.User;
 
-public class StatValue implements Cloneable {
+public class StatValue{
 
     private User user;
-    private Statistic statistic;
+    private Statistic parent;
     private int value;
 
-    public StatValue(User user, Statistic statistic, int value) {
-        this.user = user;
-        this.statistic = statistic;
-        this.value = value;
+    public StatValue(User user, Statistic parent){
+        this(user, parent, parent.getDefaultValue());
     }
 
-    public User getUser() {
+    public StatValue(User user, Statistic parent, int value){
+        this.user=user;
+        this.parent=parent;
+        this.value=value;
+    }
+
+    public User getUser(){
         return user;
     }
 
-    public Statistic getStatistic() {
-        return statistic;
+    public Statistic getParent(){
+        return parent;
     }
 
-    public int getValue() {
+    public int getValue(){
         return value;
     }
 
-    public void setValue(int value) {
-        Preconditions.checkArgument(value >= 0, "value cannot be negative");
-        this.value = value;
-    }
-
-    @Override
-    public StatValue clone() {
-        try {
-            return (StatValue) super.clone();
-        } catch (CloneNotSupportedException ex) {
-            throw new Error(ex);
-        }
+    public void setValue(int value){
+        this.value=value;
     }
 }

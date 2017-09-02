@@ -1,95 +1,97 @@
 package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Maps;
 import me.angrypostman.freeforall.statistics.StatValue;
 import me.angrypostman.freeforall.statistics.Statistic;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class UserData{
 
-    private int kills;
-    private int deaths;
-    private int points;
-    private int killStreak;
-    private Map<Statistic, StatValue> statistics;
-
-    UserData(int kills, int deaths, int points, HashMap<Statistic, StatValue> statistics){
-        this.kills=kills;
-        this.deaths=deaths;
-        this.points=points;
-        this.statistics=statistics;
+    private User user;
+    private StatValue kills;
+    private StatValue killStreak;
+    private StatValue deaths;
+    private StatValue points;
+    private Map<Statistic, StatValue> statistics=Maps.newHashMap();
+    UserData(User user, int kills, int deaths, int points){
+        this.kills=new StatValue(user, Statistic.getStatistic("kills"), kills);
+        this.deaths=new StatValue(user, Statistic.getStatistic("deaths"), deaths);
+        this.points=new StatValue(user, Statistic.getStatistic("points"), points);
+        this.killStreak=new StatValue(user, Statistic.getStatistic("kill_streak"));
     }
 
-    public int getKills(){
+    public User getUser(){
+        return user;
+    }
+
+    public StatValue getKills(){
         return kills;
     }
 
     public void addKill(){
-        this.kills++;
-        this.killStreak++;
+        kills.setValue(kills.getValue()+1);
+        killStreak.setValue(killStreak.getValue()+1);
     }
 
-    public int getDeaths(){
+    public StatValue getDeaths(){
         return deaths;
     }
 
     public void addDeath(){
-        this.deaths++;
+        deaths.setValue(deaths.getValue()+1);
     }
 
     public double getKillDeathRatio(){
-        if(getDeaths() <= 1){
-            return getKills();
+        if(getDeaths().getValue() <= 1){
+            return getKills().getValue();
         }
-        return Double.parseDouble(String.format("%.2f", ((double) getKills() / getDeaths())));
+        return Double.parseDouble(String.format("%.2f", ((double) getKills().getValue() / getDeaths().getValue())));
     }
 
     public boolean hasKillStreak(){
-        return getKillStreak() > 1;
+        return getKillStreak().getValue() > 1;
     }
 
-    public int getKillStreak(){
+    public StatValue getKillStreak(){
         return killStreak;
     }
 
     public void endStreak(){
-        this.killStreak=0;
+        this.killStreak.setValue(0);
     }
 
-    public int getPoints(){
+    public StatValue getPoints(){
         return points;
+    }
+
+    public void addPoints(int add){
+        Preconditions.checkArgument(add > 0, "points to add must be greater than 0");
+        points.setValue(points.getValue() + add);
+    }
+
+    public void subtractPoints(int subtract){
+        Preconditions.checkArgument(subtract >= 0, "points to subtract must be greater than or equal to 0");
+        Preconditions.checkArgument(this.points.getValue() - subtract >= 0, "cannot reduce a players points below 0");
+        points.setValue(points.getValue() - subtract);
     }
 
     public Map<Statistic, StatValue> getStatistics(){
         return statistics;
     }
 
-    public void addPoints(int points){
-        Preconditions.checkArgument(points > 0, "points to add must be greater than 0");
-        this.points+=points;
-    }
-
-    public void subtractPoints(int subtract){
-        Preconditions.checkArgument(subtract >= 0, "points to subtract must be greater than 0");
-        Preconditions.checkArgument(points - subtract >= 0, "cannot reduce a players points below 0");
-        this.points-=subtract;
-    }
-
-    //TODO: Very (probably) inefficient query to ask MySQL
-    //For all ratings retrieve the one for this player,
     public int getRating(){
         return 0;
     }
 
     public void resetStats(){
-
-        this.kills=0;
-        this.deaths=0;
-        this.points=0;
-        this.killStreak=0;
-
+        
+        kills.setValue(0);
+        deaths.setValue(0);
+        killStreak.setValue(0);
+        points.setValue(0);
+        
     }
 
 }

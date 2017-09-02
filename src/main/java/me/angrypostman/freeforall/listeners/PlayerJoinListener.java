@@ -3,7 +3,8 @@ package me.angrypostman.freeforall.listeners;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserManager;
+import me.angrypostman.freeforall.user.UserCache;
+import me.angrypostman.freeforall.util.Message;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;
@@ -15,28 +16,30 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.Optional;
 
-public class PlayerJoinListener implements Listener {
+public class PlayerJoinListener implements Listener{
 
-    private FreeForAll plugin = null;
-    private DataStorage dataStorage = null;
+    private FreeForAll plugin=null;
+    private DataStorage dataStorage=null;
 
-    public PlayerJoinListener(FreeForAll plugin) {
-        this.plugin = plugin;
-        this.dataStorage = plugin.getDataStorage();
+    public PlayerJoinListener(FreeForAll plugin){
+        this.plugin=plugin;
+        this.dataStorage=plugin.getDataStorage();
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
+    public void onPlayerJoin(PlayerJoinEvent event){
 
-        Player player = event.getPlayer();
-        Optional<User> optional = UserManager.getUserIfPresent(player);
+        Player player=event.getPlayer();
+        Optional<User> optional=UserCache.getUserIfPresent(player);
 
-        if (!optional.isPresent()) {
+        if(!optional.isPresent()){
             player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
             return;
         }
 
-        PlayerInventory inventory = player.getInventory();
+        User user = optional.get();
+
+        PlayerInventory inventory=player.getInventory();
         inventory.clear();
         inventory.setArmorContents(null);
 
@@ -48,6 +51,12 @@ public class PlayerJoinListener implements Listener {
         player.setLevel(0);
         player.setExp(0);
         player.setTotalExperience(0);
+
+        Message message = Message.get("join-message-broadcast");
+        if(message.getContent() != null && !message.getContent().isEmpty()){
+            message = message.replace("%player%", user.getName());
+            event.setJoinMessage(message.getContent());
+        }
 
 
     }

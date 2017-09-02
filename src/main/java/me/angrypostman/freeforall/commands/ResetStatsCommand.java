@@ -2,9 +2,9 @@ package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
+import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.user.UserData;
-import me.angrypostman.freeforall.user.UserManager;
-import org.bukkit.ChatColor;
+import me.angrypostman.freeforall.util.Message;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -15,55 +15,57 @@ import java.util.Optional;
 import static me.angrypostman.freeforall.FreeForAll.doAsync;
 import static me.angrypostman.freeforall.FreeForAll.doSync;
 
-public class ResetStatsCommand implements CommandExecutor {
+public class ResetStatsCommand implements CommandExecutor{
 
-    private FreeForAll plugin = null;
+    private FreeForAll plugin=null;
 
-    public ResetStatsCommand(FreeForAll plugin) {
-        this.plugin = plugin;
+    public ResetStatsCommand(FreeForAll plugin){
+        this.plugin=plugin;
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
+    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args){
 
-        if (!command.getName().equalsIgnoreCase("resetstats")) return false;
+        if(!command.getName().equalsIgnoreCase("resetstats")) return false;
 
-        if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage("You must be a player to perform this command.");
+        if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.resetstats")){
+            Message.get("no-permission-message").send(commandSender);
             return true;
         }
 
-        if (!commandSender.hasPermission("freeforall.command.resetstats")) {
-            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
+        Player player=(Player) commandSender;
+
+        if(args.length < 1){
+            Message.get("correct-usage-message")
+                    .replace("%commandName%", command.getName())
+                    .replace("%usage%", command.getUsage())
+                    .send(player);
             return true;
-        }
-
-        Player player = (Player) commandSender;
-
-        if (args.length < 1) {
-            player.sendMessage(ChatColor.RED + "Correct Usage: /resetstats <player>");
-            return false;
         }
 
         doAsync(() -> {
 
-            String lookupName = args[0].toLowerCase();
-            Optional<User> optional = UserManager.getUser(lookupName);
-            if (!optional.isPresent()) {
-                doSync(() -> player.sendMessage(ChatColor.RED + "Failed to find " + lookupName + " in database records."));
+            String lookupName=args[0].toLowerCase();
+            Optional<User> optional=UserCache.getUser(lookupName);
+            if(!optional.isPresent()){
+                doSync(() -> Message.get("player-not-found-message")
+                        .replace("%player%", lookupName)
+                        .send(player));
                 return;
             }
 
-            User user = optional.get();
-            UserData data = user.getUserData();
+            User user=optional.get();
+            UserData data=user.getUserData();
             data.resetStats();
 
             plugin.getDataStorage().saveUser(user);
 
-            doSync(() -> player.sendMessage(ChatColor.GREEN + user.getName() + "'s stats have been reset."));
+            doSync(() -> Message.get("player-stats-reset-message")
+                            .replace("%player%", user.getName())
+                            .send(player));
 
         });
 
-        return false;
+        return true;
     }
 }

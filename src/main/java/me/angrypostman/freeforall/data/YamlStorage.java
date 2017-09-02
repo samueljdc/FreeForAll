@@ -11,43 +11,45 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class YamlStorage extends DataStorage {
+public class YamlStorage extends DataStorage{
 
-    private FreeForAll plugin = null;
-    private File file = null;
-    private FileConfiguration configuration = null;
+    private FreeForAll plugin=null;
+    private File file=null;
+    private FileConfiguration config=null;
+    private List<Location> locations=null;
 
-    public YamlStorage(FreeForAll plugin, File file) {
+    public YamlStorage(FreeForAll plugin, File file){
         Preconditions.checkNotNull(file, "file");
-        Preconditions.checkArgument(FileUtils.getFileExtension(file).equalsIgnoreCase("yml"),
-                "file extension must be of type YML");
-        this.plugin = plugin;
-        this.file = file;
+        Preconditions.checkArgument(FileUtils.getFileExtension(file).equalsIgnoreCase("yml"), "file type must be a YML file");
+        this.file=file;
+        this.locations=new ArrayList<>();
+        this.plugin=plugin;
     }
 
     @Override
-    public boolean initialize() {
+    public boolean initialize(){
 
-        configuration = new YamlConfiguration();
+        config=new YamlConfiguration();
 
-        if (!getFile().exists()) {
-            try {
-                if (file.getParentFile() != null) {
+        if(!getFile().exists()){
+            try{
+                if(file.getParentFile() != null){
                     file.getParentFile().mkdirs();
                 }
                 file.createNewFile();
-            } catch (IOException e) {
+            } catch(IOException e){
                 e.printStackTrace();
             }
         }
 
-        try {
-            getConfiguration().load(getFile());
-        } catch (InvalidConfigurationException | IOException e) {
+        try{
+            config.load(file);
+        } catch(InvalidConfigurationException | IOException e){
             e.printStackTrace();
             return false;
         }
@@ -56,55 +58,60 @@ public class YamlStorage extends DataStorage {
     }
 
     @Override
-    public void close() {
+    public void close(){
 
     }
 
     @Override
-    public Optional<User> createUser(UUID uuid, String playerName) {
+    public Optional<User> createUser(UUID uuid, String playerName){
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(UUID uuid) {
+    public Optional<User> loadUser(UUID uuid){
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(String lookupName) {
+    public Optional<User> loadUser(String lookupName){
         return Optional.empty();
     }
 
     @Override
-    public void saveUser(User user) {
+    public void saveUser(User user){
 
     }
 
     @Override
-    public List<User> getLeaderboardTop(int page) {
+    public List<User> getLeaderboardTop(int page){
         return null;
     }
 
     @Override
-    public void saveLocation(Location location) {
+    public void saveLocation(Location location){
 
     }
 
     @Override
-    public void deleteLocation(int spawnId) {
+    public void deleteLocation(int spawnId){
 
     }
 
     @Override
-    public List<Location> getLocations() {
+    public List<Location> getLocations(){
         return null;
     }
 
-    public File getFile() {
+    @Override
+    public boolean isLoaded(){
+        return false;
+    }
+
+    public File getFile(){
         return file;
     }
 
-    public FileConfiguration getConfiguration() {
-        return configuration;
+    public FileConfiguration getConfig(){
+        return config;
     }
 }

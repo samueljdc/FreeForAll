@@ -1,42 +1,37 @@
 package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
+import me.angrypostman.freeforall.FreeForAll;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-public class Combat {
+public class Combat{
 
-    private static Map<UUID, Damage> lastDamage = new HashMap<>();
-    private static List<UUID> invulnerables = new ArrayList<>();
-    ;
+    private static Map<UUID, Damage> lastDamage=new HashMap<>();
+    private static List<UUID> invulnerables=new ArrayList<>();
+    private static FreeForAll plugin=FreeForAll.getPlugin();
 
-    public static Damage getLastDamage(User user) {
-        return lastDamage.get(Preconditions.checkNotNull(user).getPlayerUUID());
+    public static Damage getLastDamage(User user){
+        return lastDamage.get(Preconditions.checkNotNull(user).getUniqueId());
     }
 
-    public static void setLastDamage(User user, Damage damage) {
-        Preconditions.checkNotNull(user, "user");
-        lastDamage.put(user.getPlayerUUID(), damage);
+    public static void setLastDamage(User user, Damage damage){
+        Preconditions.checkNotNull(user, "user cannot be null");
+        Preconditions.checkArgument(user.isOnline(), "user not online");
+        lastDamage.put(user.getUniqueId(), damage);
     }
 
-    public static boolean inCombat(User user) {
-        Damage damage = lastDamage.get(Preconditions.checkNotNull(user, "user").getPlayerUUID());
-        return damage != null
-                && System.currentTimeMillis() - damage.getTimestamp() < TimeUnit.SECONDS.toMillis(10);
+    public static boolean hasBeenInCombat(User user){
+        Preconditions.checkNotNull(user, "user cannot be null");
+        Preconditions.checkArgument(user.isOnline(), "user not online");
+        return lastDamage.get(user.getUniqueId())!=null;
     }
 
-    public static boolean isInvulnreble(User user) {
-        return invulnerables.contains(Preconditions.checkNotNull(user, "user").getPlayerUUID());
-    }
-
-    public static void setInvulnreble(User user, boolean invulnerable) {
-        Preconditions.checkNotNull(user, "user");
-        if (invulnerable && !isInvulnreble(user)) {
-            invulnerables.add(user.getPlayerUUID());
-        } else {
-            invulnerables.remove(user.getPlayerUUID());
-        }
+    public static boolean inCombat(User user){
+        Damage damage=lastDamage.get(Preconditions.checkNotNull(user, "user").getUniqueId());
+        return damage != null && System.currentTimeMillis() - damage.getTimestamp() <= TimeUnit.SECONDS
+                .toMillis(plugin.getConfiguration().getPvPLoggerDuration());
     }
 
 }

@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public abstract class DataStorage {
+public abstract class DataStorage{
 
     public abstract boolean initialize();
 
@@ -30,5 +30,7 @@ public abstract class DataStorage {
     //public abstract void deleteLocation(Location location);
 
     public abstract List<Location> getLocations();
+
+    public abstract boolean isLoaded();
 
 }

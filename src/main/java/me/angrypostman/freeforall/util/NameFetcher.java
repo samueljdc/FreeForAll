@@ -10,33 +10,33 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.Callable;
 
-public class NameFetcher implements Callable<Map<UUID, String>> {
+public class NameFetcher implements Callable<Map<UUID, String>>{
 
-    private static final String PROFILE_URL = "https://sessionserver.mojang.com/session/minecraft/profile/";
-    private final JSONParser jsonParser = new JSONParser();
+    private static final String PROFILE_URL="https://sessionserver.mojang.com/session/minecraft/profile/";
+    private final JSONParser jsonParser=new JSONParser();
     private final List<UUID> uuids;
 
-    public NameFetcher(List<UUID> uuids) {
-        this.uuids = ImmutableList.copyOf(uuids);
+    public NameFetcher(List<UUID> uuids){
+        this.uuids=ImmutableList.copyOf(uuids);
     }
 
-    public static String getNameOf(UUID uuid) throws Exception {
+    public static String getNameOf(UUID uuid) throws Exception{
         return new NameFetcher(Collections.singletonList(uuid)).call().get(uuid);
     }
 
     @Override
-    public Map<UUID, String> call() throws Exception {
-        Map<UUID, String> uuidStringMap = new HashMap<>();
-        for (UUID uuid : uuids) {
-            HttpURLConnection connection = (HttpURLConnection) new URL(PROFILE_URL + uuid.toString().replace("-", "")).openConnection();
-            JSONObject response = (JSONObject) jsonParser.parse(new InputStreamReader(connection.getInputStream()));
-            String name = (String) response.get("name");
-            if (name == null) {
+    public Map<UUID, String> call() throws Exception{
+        Map<UUID, String> uuidStringMap=new HashMap<>();
+        for(UUID uuid : uuids){
+            HttpURLConnection connection=(HttpURLConnection) new URL(PROFILE_URL + uuid.toString().replace("-", "")).openConnection();
+            JSONObject response=(JSONObject) jsonParser.parse(new InputStreamReader(connection.getInputStream()));
+            String name=(String) response.get("name");
+            if(name == null){
                 continue;
             }
-            String cause = (String) response.get("cause");
-            String errorMessage = (String) response.get("errorMessage");
-            if (cause != null && cause.length() > 0) {
+            String cause=(String) response.get("cause");
+            String errorMessage=(String) response.get("errorMessage");
+            if(cause != null && cause.length() > 0){
                 throw new IllegalStateException(errorMessage);
             }
             uuidStringMap.put(uuid, name);

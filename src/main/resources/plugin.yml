@@ -6,13 +6,21 @@ author: AngryPostman
 
 commands:
     stats:
+       usage: "[player]"
     resetstats:
+        usage: "<player>"
     kit:
+        usage: "<kitName>"
     savekit:
+        usage: "<kitName> [permissionNode]"
     delkit:
+        usage: "<kitName>"
     setspawn:
+        usage: ""
     delspawn:
+        usage: "<spawnId>"
     leaderboard:
+        usage: "[pageID]"
         aliases: [top, records]
 permission:
     freeforall.*:

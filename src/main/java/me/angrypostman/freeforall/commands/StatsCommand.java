@@ -3,8 +3,9 @@ package me.angrypostman.freeforall.commands;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
+import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.user.UserData;
-import me.angrypostman.freeforall.user.UserManager;
+import me.angrypostman.freeforall.util.Message;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -16,80 +17,110 @@ import java.util.Optional;
 import static me.angrypostman.freeforall.FreeForAll.doAsync;
 import static me.angrypostman.freeforall.FreeForAll.doSync;
 
-public class StatsCommand implements CommandExecutor {
+public class StatsCommand implements CommandExecutor{
 
-    private FreeForAll plugin = null;
-    private DataStorage storage = null;
-
-    public StatsCommand(FreeForAll plugin) {
-        this.plugin = plugin;
-        this.storage = plugin.getDataStorage();
+    private FreeForAll plugin=null;
+    private DataStorage storage=null;
+    public StatsCommand(FreeForAll plugin){
+        this.plugin=plugin;
+        this.storage=plugin.getDataStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args) {
+    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args){
 
-        if (!command.getName().equalsIgnoreCase("stats")) return false;
+        if(!command.getName().equalsIgnoreCase("stats")) return false;
 
-        if (!(commandSender instanceof Player)) {
-            commandSender.sendMessage("You must be a player to perform this command.");
+        if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.stats")){
+            Message.get("no-permission-message").send(commandSender);
             return true;
         }
 
-        if (!commandSender.hasPermission("freeforall.command.stats")) {
-            commandSender.sendMessage(ChatColor.RED + "You don't have permission to perform this command.");
-            return true;
-        }
+        Player player=(Player) commandSender;
 
-        Player player = (Player) commandSender;
-
-        if (args.length >= 1 && player.hasPermission("freeforall.command.stats.viewOther")) {
+        if(args.length >= 1 && player.hasPermission("freeforall.command.stats.viewOther")){
 
             doAsync(() -> {
 
-                String lookupName = args[0].toLowerCase();
-                Optional<User> tempUser = UserManager.getUser(lookupName);
-                if (!tempUser.isPresent()) {
-                    doSync(() -> player.sendMessage(ChatColor.RED + "Failed to find " + lookupName + " in database records."));
+                String lookupName=args[0].toLowerCase();
+                Optional<User> tempUser=UserCache.getUser(lookupName);
+                if(!tempUser.isPresent()){
+                    doSync(() -> doSync(() -> Message.get("player-not-found-message")
+                            .replace("%player%", lookupName)
+                            .send(player)));
                     return;
                 }
 
-                User target = tempUser.get();
-                UserData userData = target.getUserData();
+                User user=tempUser.get();
+                UserData userData=user.getUserData();
+
+                //Add the user back to the cache so we don't have to query the database
+                //(user data expires every 10 minutes)
+                if(!user.isOnline()) UserCache.cacheUser(user);
 
                 doSync(() -> {
-                    player.sendMessage(ChatColor.GOLD + "FFA >> " + target.getName() + "'s stats");
-                    //player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
-                    player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKillDeathRatio());
+
+                    Message.get("player-stats-heading")
+                            .replace("%player%", user.getName())
+                            .send(player);
+                    Message.get("player-stats-format")
+                            .replace("%statistic%", userData.getPoints().getParent().getFriendlyName())
+                            .replace("%value%", userData.getPoints().getValue())
+                            .send(player);
+                    Message.get("player-stats-format")
+                            .replace("%statistic%", userData.getKills().getParent().getFriendlyName())
+                            .replace("%value%", userData.getKills().getValue())
+                            .send(player);
+                    Message.get("player-stats-format")
+                            .replace("%statistic%", userData.getDeaths().getParent().getFriendlyName())
+                            .replace("%value%", userData.getDeaths().getValue())
+                            .send(player);
+                    Message.get("player-stats-format")
+                            .replace("%statistic%", userData.getKillStreak().getParent().getFriendlyName())
+                            .replace("%value%", userData.getKillStreak().getValue())
+                            .send(player);
+                    Message.get("player-stats-footer").send(player);
+
                 });
 
             });
 
-        } else {
+        } else{
 
 
-            Optional<User> tempUser = UserManager.getUserIfPresent(player.getUniqueId());
-            if (!tempUser.isPresent()) {
-                doSync(() -> player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog."));
-                return false;
+            Optional<User> tempUser=UserCache.getUserIfPresent(player.getUniqueId());
+            if(!tempUser.isPresent()){
+                player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog.");
+                return true;
             }
 
-            User user = tempUser.get();
-            UserData userData = user.getUserData();
+            User user=tempUser.get();
+            UserData userData=user.getUserData();
 
-            player.sendMessage(ChatColor.GOLD + "FFA >> " + user.getName() + "'s stats");
-            //player.sendMessage(ChatColor.GOLD + "FFA >> Ranking: 0");
-            player.sendMessage(ChatColor.GOLD + "FFA >> Points: " + userData.getPoints());
-            player.sendMessage(ChatColor.GOLD + "FFA >> Kills: " + userData.getKills());
-            player.sendMessage(ChatColor.GOLD + "FFA >> Deaths: " + userData.getDeaths());
-            player.sendMessage(ChatColor.GOLD + "FFA >> Kill/Death Ratio: " + userData.getKillDeathRatio());
+            Message.get("player-stats-heading")
+                    .replace("%player%", user.getName())
+                    .send(player);
+            Message.get("player-stats-format")
+                    .replace("%statistic%", userData.getPoints().getParent().getFriendlyName())
+                    .replace("%value%", userData.getPoints().getValue())
+                    .send(player);
+            Message.get("player-stats-format")
+                    .replace("%statistic%", userData.getKills().getParent().getFriendlyName())
+                    .replace("%value%", userData.getKills().getValue())
+                    .send(player);
+            Message.get("player-stats-format")
+                    .replace("%statistic%", userData.getDeaths().getParent().getFriendlyName())
+                    .replace("%value%", userData.getDeaths().getValue())
+                    .send(player);
+            Message.get("player-stats-format")
+                    .replace("%statistic%", userData.getKillStreak().getParent().getFriendlyName())
+                    .replace("%value%", userData.getKillStreak().getValue())
+                    .send(player);
+            Message.get("player-stats-footer").send(player);
 
         }
 
-        return false;
+        return true;
     }
 
 }

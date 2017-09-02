@@ -4,82 +4,83 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import me.angrypostman.freeforall.FreeForAll;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Pattern;
 
-public class Updater {
+public class Updater{
 
-    private FreeForAll plugin = null;
-    private String latestVersion = null;
+    private static final String SPIGET_URL="https://api.spiget.org";
+    private static final String SPIGOT_URL="https://spigot.org";
+    private static final int RESOURCE_ID=81;
 
-    public Updater(FreeForAll plugin) {
-        this.plugin = plugin;
+    private FreeForAll plugin=null;
+    private String latestVersion=null;
+    private String latestVersionURL=null;
+
+    public Updater(FreeForAll plugin){
+        this.plugin=plugin;
     }
 
-    private boolean checkHigher(String currentVersion, String newVersion) {
-        String current = toReadable(currentVersion);
-        String newVers = toReadable(newVersion);
-        return current.compareTo(newVers) < 0;
+    private boolean checkHigher(String currentVersion, String newVersion){
+        return currentVersion.compareTo(newVersion) < 0;
     }
 
-    public void checkUpdate(String currentVersion) throws IOException {
+    public void checkUpdate(String currentVersion) throws IOException{
 
-        URL url = new URL("https://api.spiget.org/v2/resources/81/versions");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        URL url=new URL(String.format("%s/v2/resources/%s/versions", SPIGET_URL, RESOURCE_ID));
+
+        HttpURLConnection connection=(HttpURLConnection) url.openConnection();
+        connection.addRequestProperty("Content-Type", "text/json");
         connection.addRequestProperty("User-Agent", "Mozilla/5.0"); // Mozilla 5.0 User-Agent
+        connection.setUseCaches(false);
+        connection.setDoOutput(true);
 
-        InputStream inputStream = connection.getInputStream();
-        InputStreamReader reader = new InputStreamReader(inputStream);
+        try(InputStream inputStream=connection.getInputStream(); InputStreamReader reader=new InputStreamReader(inputStream)){
 
-        JsonElement element = new JsonParser().parse(reader);
-        JsonArray jsonArray = element.getAsJsonArray();
+            JsonElement element=new JsonParser().parse(reader);
+            JsonArray jsonArray=element.getAsJsonArray();
 
-        //GET /resources/{version}/versions returns in Oldest > Newest order
-        //So we need to reverse it to get the latest version
-        jsonArray = reverseArray(jsonArray);
+            //GET /resources/{resourceId}/versions returns in Oldest > Newest order
+            //So we need to reverse it to get the latest version
+            jsonArray=reverseArray(jsonArray);
 
-        JsonObject object = jsonArray.get(0).getAsJsonObject();
+            JsonObject object=jsonArray.get(0).getAsJsonObject();
 
-        reader.close();
-        inputStream.close();
-        connection.disconnect();
+            String version=object.get("name").getAsString();
 
-        if (!checkHigher(currentVersion, object.get("name").getAsString())) return;
+            if(!checkHigher(currentVersion, version)) return;
 
-        this.latestVersion = object.get("name").getAsString();
+            this.latestVersion=version;
+            this.latestVersionURL=SPIGOT_URL + object.get("url").getAsString();
+            this.latestVersionURL=latestVersionURL.replace("\\", "");
+
+        }
 
     }
 
-    public String getLatestVersion() {
+    public String getLatestVersion(){
         return latestVersion;
     }
 
-    public boolean hasUpdate() throws IOException {
-        checkUpdate(plugin.getConfiguration().getVersion());
-        return getLatestVersion() != null;
+    public String getLatestVersionURL(){
+        return latestVersionURL;
     }
 
-    private String toReadable(String version) {
-        String[] split = Pattern.compile(".", Pattern.LITERAL).split(version.replace("v", ""));
-        StringBuilder versionBuilder = new StringBuilder();
-        for (String s : split) {
-            versionBuilder.append(String.format("%4s", s));
+    public boolean hasUpdate() throws IOException{
+        if(latestVersion == null){
+            checkUpdate(plugin.getDescription().getVersion());
         }
-        version = versionBuilder.toString();
-        return version;
+        return latestVersion != null;
     }
 
-    private JsonArray reverseArray(JsonArray jsonArray) {
-        JsonArray arr = new JsonArray();
-        for (int i = jsonArray.size()-1; i >= 0; i--) {
+    private JsonArray reverseArray(JsonArray jsonArray){
+        JsonArray arr=new JsonArray();
+        for(int i=jsonArray.size() - 1; i >= 0; i--){
             arr.add(jsonArray.get(i));
         }
         return arr;

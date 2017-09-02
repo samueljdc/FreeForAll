@@ -4,6 +4,7 @@ import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.*;
 import me.angrypostman.freeforall.util.Configuration;
+import me.angrypostman.freeforall.util.Message;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.World;
@@ -18,20 +19,19 @@ import java.util.Optional;
 
 import static me.angrypostman.freeforall.FreeForAll.doSyncLater;
 
-public class PlayerDeathListener implements Listener {
+public class PlayerDeathListener implements Listener{
 
-    private FreeForAll plugin = null;
-    private Configuration configuration = null;
-    private DataStorage storage = null;
-
-    public PlayerDeathListener(FreeForAll plugin) {
-        this.plugin = plugin;
-        this.configuration = plugin.getConfiguration();
-        this.storage = plugin.getDataStorage();
+    private FreeForAll plugin=null;
+    private Configuration configuration=null;
+    private DataStorage storage=null;
+    public PlayerDeathListener(FreeForAll plugin){
+        this.plugin=plugin;
+        this.configuration=plugin.getConfiguration();
+        this.storage=plugin.getDataStorage();
     }
 
     @EventHandler
-    public void onPlayerDeath(PlayerDeathEvent event) {
+    public void onPlayerDeath(PlayerDeathEvent event){
 
         event.setDeathMessage(null);
         event.setKeepInventory(false);
@@ -41,51 +41,65 @@ public class PlayerDeathListener implements Listener {
         event.setNewTotalExp(0);
         event.setDroppedExp(0);
 
-        Player player = event.getEntity();
-        Optional<User> optional = UserManager.getUserIfPresent(player);
+        Player player=event.getEntity();
+        Optional<User> optional=UserCache.getUserIfPresent(player);
 
-        PlayerInventory inventory = player.getInventory();
+        PlayerInventory inventory=player.getInventory();
         inventory.setArmorContents(null);
         inventory.clear();
 
-        if (!optional.isPresent()) { //This should NEVER happen
+        if(!optional.isPresent()){ //This should NEVER happen
             player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog");
             return;
         }
 
-        User user = optional.get();
-        UserData userData = user.getUserData();
+        User user=optional.get();
+        UserData userData=user.getUserData();
 
-        User killer = null;
+        String deathMessage=Message.get("player-death-message").replace("%player%", user.getName()).getContent();
+        if(Combat.inCombat(user)){
 
-        String deathMessage = ChatColor.RED+player.getName()+" has been killed.";
-        if (Combat.inCombat(user)) {
+            Damage damage=Combat.getLastDamage(user);
+            User killer=damage.getDamager();
 
-            Damage damage = Combat.getLastDamage(user);
-            killer = damage.getDamager();
-
-            UserData killerData = killer.getUserData();
+            UserData killerData=killer.getUserData();
 
             //Need a better method for calculating gained/lost,
             //Might use optional percentages or something
-            int playerPoints = userData.getPoints();
+            int playerPoints=userData.getPoints().getValue();
 
-            int gained = configuration.getGainedLost();
-            int lost = (playerPoints - gained < 0 ? playerPoints : gained);
+            int gained=0;
+            String gainedLost=configuration.getGainedLost();
+            if (gainedLost.endsWith("%")){
+
+                gainedLost=gainedLost.substring(0, gainedLost.length()-1);
+                float percentage=Float.parseFloat(gainedLost)/100;
+                gained=Math.round(userData.getPoints().getValue()*percentage);
+
+            } else { gained=Integer.parseInt(gainedLost); }
+
+            if(gained <= 0)gained=5;
+
+            int lost=(playerPoints - gained < 0 ? playerPoints : gained);
 
             killerData.addPoints(gained);
             userData.subtractPoints(lost);
 
-            Player killerPlayer = killer.getBukkitPlayer();
-            player.sendMessage(ChatColor.RED+"You were killed by "+killerPlayer.getName()+" and lost "+lost+" points.");
-            killerPlayer.sendMessage(ChatColor.GREEN+"You killed "+player.getName()+" and gained "+gained+" points.");
+            Message.get("player-death-private-message").replace("%killer%", killer.getName()).replace("%lostPoints%", lost).send(user.getBukkitPlayer());
+            Message.get("player-killed-private-message").replace("%player%", user.getName()).replace("%gainedPoints%", gained).send(killer.getBukkitPlayer());
 
-            deathMessage = ChatColor.RED+player.getName()+" has been slain by "+killerPlayer.getName();
-            if (userData.hasKillStreak() && userData.getKillStreak() > 3) {
-                deathMessage = ChatColor.RED+player.getName()+"'s kill streak was brought to a fatal end by "+killerPlayer.getName();
-                userData.endStreak();
+//            user.sendMessage(ChatColor.RED + "You were killed by " + killerPlayer.getName() + " and lost " + lost + " points.");
+//            killerPlayer.sendMessage(ChatColor.GREEN + "You killed " + player.getName() + " and gained " + gained + " points.");
+
+            deathMessage=Message.get("player-slain-message").replace("%player%", user.getName()).replace("%killer%", killer.getName()).getContent();
+            if(userData.hasKillStreak() && userData.getKillStreak().getValue() > 3){
+                deathMessage=Message.get("player-kill-streak-ended-message")
+                        .replace("%player%", user.getName()).replace("%killer%", killer.getName())
+                        .replace("%killStreak%", userData.getKillStreak()).getContent();
+
             }
 
+            userData.endStreak();
             killerData.addKill();
 
             Combat.setLastDamage(user, null);
@@ -93,11 +107,9 @@ public class PlayerDeathListener implements Listener {
         }
 
         userData.addDeath();
-
-        World world = player.getWorld();
-
         event.setDeathMessage(deathMessage);
 
+        World world=player.getWorld();
         doSyncLater(() -> {
 
             player.spigot().respawn();
