@@ -1,11 +1,8 @@
 package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 import me.angrypostman.freeforall.statistics.StatValue;
 import me.angrypostman.freeforall.statistics.Statistic;
-
-import java.util.Map;
 
 public class UserData{
 
@@ -14,7 +11,6 @@ public class UserData{
     private StatValue killStreak;
     private StatValue deaths;
     private StatValue points;
-    private Map<Statistic, StatValue> statistics=Maps.newHashMap();
     UserData(User user, int kills, int deaths, int points){
         this.kills=new StatValue(user, Statistic.getStatistic("kills"), kills);
         this.deaths=new StatValue(user, Statistic.getStatistic("deaths"), deaths);
@@ -59,7 +55,7 @@ public class UserData{
     }
 
     public void endStreak(){
-        this.killStreak.setValue(0);
+        killStreak.setValue(0);
     }
 
     public StatValue getPoints(){
@@ -72,14 +68,11 @@ public class UserData{
     }
 
     public void subtractPoints(int subtract){
-        Preconditions.checkArgument(subtract >= 0, "points to subtract must be greater than or equal to 0");
+        Preconditions.checkArgument(subtract >= 0, "points to subtract must be greater than 0");
         Preconditions.checkArgument(this.points.getValue() - subtract >= 0, "cannot reduce a players points below 0");
         points.setValue(points.getValue() - subtract);
     }
 
-    public Map<Statistic, StatValue> getStatistics(){
-        return statistics;
-    }
 
     public int getRating(){
         return 0;

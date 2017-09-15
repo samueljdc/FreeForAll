@@ -54,7 +54,7 @@ public class UserCache{
     }
 
     public static List<User> getUsers(){
-        return new ArrayList<>(users);
+        return users;
     }
 
     public static void cacheUser(User user){

@@ -1,26 +1,38 @@
 package me.angrypostman.freeforall.statistics;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.Set;
 
-public class Statistic{
+public enum Statistic{
+
+    KILLS("kills", "Kills", "The total kills a player has."),
+    DEATHS("deaths", "Deaths", "The total times a player has died."),
+    POINTS("points", "Points", "The total points of a player."),
+    KILL_STREAK("kill_streak", "Kill Streak", "Total amounts of kills a player has had.");
+
+    private static final Map<String, Statistic> BY_NAME=Maps.newHashMap();
+
+    static{
+        for (Statistic stat:values())BY_NAME.put(stat.getName(), stat);
+    }
 
     private String name;
     private String friendlyName;
     private String description;
     private int defaultValue;
 
-    private static final Map<String, Statistic> BY_NAME=Maps.newHashMap();
-    private static final Set<Statistic> STATISTICS=Sets.newHashSet();
-
-    public Statistic(String name, String friendlyName){
+    Statistic(String name, String friendlyName, String description){
         this.name=name;
         this.friendlyName=friendlyName;
+        this.description=description;
+    }
+
+    Statistic(String name, String friendlyName, String description, int defaultValue){
+        this.name=name;
+        this.friendlyName=friendlyName;
+        this.description=description;
+        this.defaultValue=defaultValue;
     }
 
     public String getName(){
@@ -35,36 +47,12 @@ public class Statistic{
         return description;
     }
 
-    public void setDescription(String description){
-        this.description=description;
-    }
-
     public int getDefaultValue(){
         return defaultValue;
     }
 
-    public void setDefaultValue(int defaultValue){
-        this.defaultValue=defaultValue;
-    }
-
     public static Statistic getStatistic(String name){
         return BY_NAME.get(name);
-    }
-
-    public static void registerStatistic(Statistic statistic){
-        Preconditions.checkNotNull(statistic, "statistic cannot be null");
-        Preconditions.checkArgument(BY_NAME.get(statistic.getName())==null, "statistic already defined");
-        STATISTICS.add(statistic);
-        BY_NAME.put(statistic.getName().toLowerCase().replace(" ", "_"), statistic);
-    }
-
-    public static void unregisterAll(){
-        STATISTICS.clear();
-        BY_NAME.clear();
-    }
-
-    public static Collection<Statistic> getStatistics(){
-        return Sets.newHashSet(STATISTICS);
     }
 
 }

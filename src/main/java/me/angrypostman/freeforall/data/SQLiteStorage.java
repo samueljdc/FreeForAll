@@ -1,7 +1,6 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
-import com.zaxxer.hikari.HikariDataSource;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
@@ -13,7 +12,6 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.*;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
 public class SQLiteStorage extends DataStorage{
@@ -21,7 +19,7 @@ public class SQLiteStorage extends DataStorage{
     private static final int PAGE_ROWS=10;
     private FreeForAll plugin=null;
     private File dataFile;
-    private HikariDataSource dataSource=null;
+    private Connection connection;
     private List<Location> locations;
 
     public SQLiteStorage(FreeForAll plugin, File dataFile){
@@ -33,7 +31,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public boolean initialize(){
 
-        Preconditions.checkArgument(dataSource == null || !dataSource.isClosed(), "cannot initialize data storage as data storage is " + "already initialized");
+        Preconditions.checkArgument(!isLoaded(), "cannot initialize data storage as data storage is already initialized");
 
         if (!dataFile.exists()){
             File parent=dataFile.getParentFile();
@@ -48,20 +46,20 @@ public class SQLiteStorage extends DataStorage{
 
         plugin.getLogger().info("Initializing database connection pool...");
 
-        dataSource=new HikariDataSource();
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch(ClassNotFoundException ex){
+            plugin.getLogger().info("Failed to resolve SQLite class name");
+            return false;
+        }
 
         String jdbcUrl="jdbc:sqlite:" + dataFile.getPath();
-        dataSource.setJdbcUrl(jdbcUrl);
-        dataSource.setMaximumPoolSize(30);
-        dataSource.setConnectionTimeout(TimeUnit.SECONDS.toMillis(5));
-
         plugin.getLogger().info("Attempting to connect to " + jdbcUrl + "...");
 
-        Connection connection=null;
         PreparedStatement statement=null;
         ResultSet set=null;
         try{
-            connection=getConnection();
+            connection=DriverManager.getConnection(jdbcUrl);
             DatabaseMetaData databaseMeta=connection.getMetaData();
 
             plugin.getLogger().info("A connection was successfully established to SQLite, validating tables...");
@@ -144,13 +142,6 @@ public class SQLiteStorage extends DataStorage{
                 }
             }
 
-            if(connection != null){
-                try{
-                    connection.close();
-                } catch(SQLException ignored){
-                }
-            }
-
         }
 
         return true;
@@ -159,7 +150,8 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public void close(){
 
-        Preconditions.checkArgument(dataSource != null && !dataSource.isClosed(), "cannot shutdown data storage as data storage " + "is not initialized");
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
+        Preconditions.checkArgument(isLoaded(), "cannot shutdown data storage as data storage " + "is not initialized");
 
         plugin.getLogger().info("Performing DataStorage shutdown...");
 
@@ -174,8 +166,14 @@ public class SQLiteStorage extends DataStorage{
         this.locations.clear();
 
         plugin.getLogger().info("Shutting down connection pool...");
-        if(dataSource != null && !dataSource.isClosed()){
-            dataSource.close();
+        if(connection != null){
+            try{
+                if(!connection.isClosed()){
+                    connection.close();
+                }
+            } catch(SQLException e){
+                e.printStackTrace();
+            }
         }
 
         plugin.getLogger().info("DataStorage shutdown complete!");
@@ -184,6 +182,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public Optional<User> createUser(UUID playerUUID, String playerName){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(playerUUID, "uuid cannot be null");
         Preconditions.checkArgument(playerName != null && !playerName.isEmpty(), "player name cannot be null or effectively null");
 
@@ -242,6 +241,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public Optional<User> loadUser(UUID uuid){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(uuid, "uuid cannot be null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
@@ -306,6 +306,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public Optional<User> loadUser(String lookupName){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkArgument(lookupName != null && !lookupName.isEmpty(), "lookupName cannot be null or effectively null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
@@ -370,6 +371,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public void saveUser(User user){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(user, "user cannot be null");
 
         Connection connection=null;
@@ -416,6 +418,9 @@ public class SQLiteStorage extends DataStorage{
 
     @Override
     public List<User> getLeaderboardTop(int page){
+
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
+        Preconditions.checkArgument(page >= 0, "page cannot be negative");
 
         List<User> leaderboard=new ArrayList<>();
 
@@ -472,6 +477,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public void saveLocation(Location location){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(location, "location cannot be null");
 
         Connection connection=null;
@@ -521,6 +527,7 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public void deleteLocation(int spawnId){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkArgument(spawnId >= 0 && spawnId <= locations.size(), "invalid spawnId");
 
         Connection connection=null;
@@ -574,12 +581,16 @@ public class SQLiteStorage extends DataStorage{
 
     @Override
     public boolean isLoaded(){
-        return false;
+        try{
+            return connection != null && !connection.isClosed();
+        } catch (SQLException ex){
+            return false;
+        }
     }
 
     private Connection getConnection() throws SQLException{
-        Preconditions.checkArgument(dataSource != null && !dataSource.isClosed(), "data source must be initialized first");
-        return dataSource.getConnection();
+        Preconditions.checkArgument(isLoaded(), "data source must be initialized first");
+        return connection;
     }
 
 }

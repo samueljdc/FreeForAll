@@ -5,6 +5,7 @@ import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Message;
+
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.attribute.Attribute;

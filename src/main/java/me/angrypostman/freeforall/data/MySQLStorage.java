@@ -1,14 +1,11 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
-
 import com.zaxxer.hikari.HikariDataSource;
-
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
-import me.angrypostman.freeforall.user.UserData;
 import me.angrypostman.freeforall.user.UserCache;
-
+import me.angrypostman.freeforall.user.UserData;
 import org.bukkit.Location;
 import org.bukkit.World;
 
@@ -41,9 +38,16 @@ public class MySQLStorage extends DataStorage{
     @Override
     public boolean initialize(){
 
-        Preconditions.checkArgument(!isLoaded(), "cannot start data storage as data storage is already initialized");
+        Preconditions.checkArgument(!isLoaded(), "cannot initialize data storage as data storage is already initialized");
 
         plugin.getLogger().info("Initializing database connection pool...");
+
+        try{
+            Class.forName("com.mysql.jdbc.Driver");
+        } catch(ClassNotFoundException ex){
+            plugin.getLogger().info("Failed to resolve MySQL JDBC driver");
+            return false;
+        }
 
         dataSource=new HikariDataSource();
 
@@ -182,6 +186,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public Optional<User> createUser(UUID playerUUID, String playerName){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(playerUUID, "uuid cannot be null");
         Preconditions.checkArgument(playerName != null && !playerName.isEmpty(), "player name cannot be null or effectively null");
 
@@ -240,6 +245,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public Optional<User> loadUser(UUID uuid){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(uuid, "uuid cannot be null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
@@ -304,6 +310,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public Optional<User> loadUser(String lookupName){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkArgument(lookupName != null && !lookupName.isEmpty(), "lookupName cannot be null or effectively null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
@@ -368,6 +375,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public void saveUser(User user){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(user, "user cannot be null");
 
         Connection connection=null;
@@ -414,6 +422,9 @@ public class MySQLStorage extends DataStorage{
 
     @Override
     public List<User> getLeaderboardTop(int page){
+
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
+        Preconditions.checkArgument(page >= 0, "page cannot be negative");
 
         List<User> leaderboard=new ArrayList<>();
 
@@ -470,6 +481,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public void saveLocation(Location location){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(location, "location cannot be null");
 
         Connection connection=null;
@@ -519,6 +531,7 @@ public class MySQLStorage extends DataStorage{
     @Override
     public void deleteLocation(int spawnId){
 
+        Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkArgument(spawnId >= 0 && spawnId <= locations.size(), "invalid spawnId");
 
         Connection connection=null;
@@ -576,7 +589,7 @@ public class MySQLStorage extends DataStorage{
     }
 
     private Connection getConnection() throws SQLException{
-        Preconditions.checkArgument(dataSource != null && !dataSource.isClosed(), "data source must be initialized first");
+        Preconditions.checkArgument(isLoaded(), "data source must be initialized first");
         return dataSource.getConnection();
     }
 

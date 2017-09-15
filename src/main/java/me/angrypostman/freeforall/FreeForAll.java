@@ -7,7 +7,6 @@ import me.angrypostman.freeforall.data.MySQLStorage;
 import me.angrypostman.freeforall.data.SQLiteStorage;
 import me.angrypostman.freeforall.kit.KitManager;
 import me.angrypostman.freeforall.listeners.*;
-import me.angrypostman.freeforall.statistics.Statistic;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Configuration;
@@ -28,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 
@@ -45,7 +45,7 @@ public class FreeForAll extends JavaPlugin{
 
     //We want every Runnable that we schedule to be logged
     //So we can later forcibly run them on shutdown
-    private List<BukkitRunnable> runnables=new ArrayList<>();
+    private List<BukkitRunnable> runnables=new CopyOnWriteArrayList<>();
 
     public static FreeForAll getPlugin(){
         return plugin;
@@ -59,7 +59,7 @@ public class FreeForAll extends JavaPlugin{
                     runnable.run();
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.printStackTrace();
+                    ex.getCause().printStackTrace();
                 }
             }
         };
@@ -74,13 +74,12 @@ public class FreeForAll extends JavaPlugin{
                     runnable.run();
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.printStackTrace();
+                    ex.getCause().printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
             }
         };
-        plugin.getRunnables().add(bukkitRunnable);
         bukkitRunnable.runTaskLaterAsynchronously(plugin, ticksLater);
     }
 
@@ -93,7 +92,7 @@ public class FreeForAll extends JavaPlugin{
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     plugin.cancelTask(this.getTaskId());
-                    ex.printStackTrace();
+                    ex.getCause().printStackTrace();
                 }
             }
         };
@@ -109,7 +108,7 @@ public class FreeForAll extends JavaPlugin{
                     runnable.run();
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.printStackTrace();
+                    ex.getCause().printStackTrace();
                 }
             }
         };
@@ -124,7 +123,7 @@ public class FreeForAll extends JavaPlugin{
                     runnable.run();
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.printStackTrace();
+                    ex.getCause().printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
@@ -142,7 +141,8 @@ public class FreeForAll extends JavaPlugin{
                     runnable.run();
                 } catch(Throwable ex){
                     plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.printStackTrace();
+                    plugin.cancelTask(this.getTaskId());
+                    ex.getCause().printStackTrace();
                 }
             }
         };
@@ -182,33 +182,6 @@ public class FreeForAll extends JavaPlugin{
         configuration.load();
 
         Message.load(getConfig());
-
-        //Going to have to work on descriptions when they actually
-        //End up coming into play
-        {
-            Statistic statistic=new Statistic("points", "Points");
-            statistic.setDefaultValue(0);
-            statistic.setDescription("The amount of points a player has.");
-            Statistic.registerStatistic(statistic);
-        }
-        {
-            Statistic statistic=new Statistic("kills", "Kills");
-            statistic.setDefaultValue(0);
-            statistic.setDescription("The amount of kills a player has.");
-            Statistic.registerStatistic(statistic);
-        }
-        {
-            Statistic statistic=new Statistic("deaths", "Deaths");
-            statistic.setDefaultValue(0);
-            statistic.setDescription("The amount of deaths a player has.");
-            Statistic.registerStatistic(statistic);
-        }
-        {
-            Statistic statistic=new Statistic("kill_streak", "Kill Streak");
-            statistic.setDefaultValue(0);
-            statistic.setDescription("The current kill streak of a player.");
-            Statistic.registerStatistic(statistic);
-        }
 
 
         String storageMethod=configuration.getStorageMethod();
@@ -331,6 +304,8 @@ public class FreeForAll extends JavaPlugin{
 
         }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
 
+        System.out.println(getConfig().getClass().getCanonicalName());
+
         configuration.set("version", getDescription().getVersion());
         configuration.saveConfiguration();
 
@@ -366,8 +341,7 @@ public class FreeForAll extends JavaPlugin{
 
         if(runnables.size() > 0){ //Force all remaining tasks to run
             getLogger().info("Shutting down "+runnables.size()+" tasks...");
-            getRunnables().forEach(runnable ->
-                    cancelTask(runnable.getTaskId(), true));
+            getRunnables().forEach(runnable->cancelTask(runnable.getTaskId(), true));
         }
 
         //Cancel all tasks

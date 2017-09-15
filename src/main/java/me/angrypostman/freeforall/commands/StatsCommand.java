@@ -29,7 +29,7 @@ public class StatsCommand implements CommandExecutor{
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args){
 
-        if(!command.getName().equalsIgnoreCase("stats")) return false;
+        if(!command.getName().equalsIgnoreCase("stats")) return true;
 
         if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.stats")){
             Message.get("no-permission-message").send(commandSender);
