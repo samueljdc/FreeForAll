@@ -49,8 +49,8 @@ messages:
     player-stats-format: "&6%statistic%: %value%"
     player-stats-footer: "&7---- ---- ---- ----"
     chat-format: "[%group%] %player%: %message%"
-    spectate-enabled-message: "&aSpectator mode has been enabled."
-    spectate-disabled-message: "&cSpectator mode has been disabled"
-    spectate-in-combat-message: "&cYou cannot enable spectator mode if you have been in combat."
+    spectator-enabled-message: "&aSpectator mode has been enabled."
+    spectator-disabled-message: "&cSpectator mode has been disabled"
+    spectator-in-combat-message: "&cYou cannot enable spectator mode if you have been in combat."
     banned-command-message: "&cThis command is banned during Combat"
 version: 2.23

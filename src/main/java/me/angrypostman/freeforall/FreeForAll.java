@@ -25,6 +25,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -170,9 +171,10 @@ public class FreeForAll extends JavaPlugin{
         getLogger().info("Validating configuration file...");
         try{
             YamlConfiguration config=new YamlConfiguration();
-            config.load(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8));
+            config.load(new BufferedReader(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8)));
             syncConfig(config, getConfig());
             saveConfig();
+            reloadConfig();
         } catch(Exception e){
             getLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
         }
@@ -400,7 +402,7 @@ public class FreeForAll extends JavaPlugin{
     }
 
     private void syncConfig(ConfigurationSection from, ConfigurationSection to){
-        from.getKeys(true).stream().filter(fromKey -> !to.contains(fromKey))
+        from.getKeys(true).stream().filter(fromKey -> !to.isSet(fromKey))
                 .forEachOrdered(fromKey -> to.set(fromKey, from.get(fromKey)));
     }
 }
