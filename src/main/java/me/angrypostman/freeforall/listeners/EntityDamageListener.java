@@ -80,6 +80,12 @@ public class EntityDamageListener implements Listener{
             }
 
             if(attacker.isPresent()){
+                User enemy = attacker.get();
+                if (enemy.isSpectating()){
+                    event.setCancelled(true);
+                    event.setDamage(0.0D);
+                    return;
+                }
                 Damage damage=new Damage(user, attacker.get(), finalDamage);
                 Combat.setLastDamage(user, damage);
             }
