@@ -40,7 +40,7 @@ public class KitCommand implements CommandExecutor{
         Optional<User> userOptional=UserCache.getUserIfPresent(player);
 
         if(!userOptional.isPresent()){
-            player.sendMessage(ChatColor.RED + "Failed to load player data, please relog");
+            player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog");
             return true;
         }
 

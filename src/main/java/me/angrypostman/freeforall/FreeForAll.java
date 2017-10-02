@@ -293,23 +293,21 @@ public class FreeForAll extends JavaPlugin{
         getCommand("leaderboard").setExecutor(new LeaderboardCommand(this));
         getCommand("setspawn").setExecutor(new SetSpawnCommand(this));
         getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
+        getCommand("spectate").setExecutor(new SpectateCommand(this));
 
         getLogger().info("Commands registered!");
 
         doSyncRepeating(() -> {
 
             //Cleanup unused data
-            Iterator<User> iterator=UserCache.getUsers().iterator();
-            while(iterator.hasNext()){
-
-                User user=iterator.next();
+            for(User user : UserCache.getUsers()){
 
                 Player player=user.getBukkitPlayer();
                 long downloadTime=user.getDownloadTime();
 
                 if(player == null || !player.isOnline()){
                     if(System.currentTimeMillis() - downloadTime >= TimeUnit.MINUTES.toMillis(10)){
-                        iterator.remove();
+                        UserCache.expireUser(user);
                     }
                 }
 

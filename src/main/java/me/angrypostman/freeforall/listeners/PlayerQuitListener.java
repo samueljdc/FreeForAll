@@ -5,7 +5,7 @@ import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.*;
 import me.angrypostman.freeforall.util.Configuration;
 import me.angrypostman.freeforall.util.Message;
-
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -40,6 +40,19 @@ public class PlayerQuitListener implements Listener{
         String quitMessage = Message.get("quit-message-broadcast")
                 .replace("%player%", user.getName())
                 .getContent();
+
+        if (user.isSpectating()){
+            Bukkit.getOnlinePlayers().forEach(online->{
+                if (!online.canSee(player)){
+                    online.showPlayer(player);
+                }
+            });
+
+            player.setAllowFlight(false);
+            player.setFlying(false);
+
+            UserCache.setSpectating(user, false);
+        }
 
         if(Combat.inCombat(user)){
 

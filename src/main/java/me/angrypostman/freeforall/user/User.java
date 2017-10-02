@@ -66,6 +66,10 @@ public class User{
         return userData;
     }
 
+    public boolean isSpectating(){
+        return UserCache.isSpectating(this);
+    }
+
     public long getDownloadTime(){
         return downloadTime;
     }

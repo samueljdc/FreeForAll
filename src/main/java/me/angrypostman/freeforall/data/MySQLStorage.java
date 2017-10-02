@@ -167,11 +167,9 @@ public class MySQLStorage extends DataStorage{
         plugin.getLogger().info("Performing DataStorage shutdown...");
 
         plugin.getLogger().info("Saving user data of " + plugin.getServer().getOnlinePlayers().size() + " players...");
-        Iterator<User> iterator=UserCache.getUsers().iterator();
-        while(iterator.hasNext()){
-            User user=iterator.next();
+        for(User user : UserCache.getUsers()){
+            UserCache.expireUser(user);
             saveUser(user);
-            iterator.remove();
         }
 
         this.locations.clear();

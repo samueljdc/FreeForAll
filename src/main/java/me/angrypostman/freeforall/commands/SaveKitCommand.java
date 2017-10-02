@@ -31,12 +31,7 @@ public class SaveKitCommand implements CommandExecutor{
 
         if(!command.getName().equalsIgnoreCase("savekit")) return false;
 
-        if(!(commandSender instanceof Player)){
-            Message.get("no-permission-message").send(commandSender);
-            return true;
-        }
-
-        if(!commandSender.hasPermission("freeforall.command.savekit")){
+        if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.savekit")){
             Message.get("no-permission-message").send(commandSender);
             return true;
         }

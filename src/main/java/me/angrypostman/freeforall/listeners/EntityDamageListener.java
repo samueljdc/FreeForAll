@@ -40,6 +40,13 @@ public class EntityDamageListener implements Listener{
         User user=optional.get();
 
         double finalDamage=event.getFinalDamage();
+
+        if (user.isSpectating()){
+            event.setCancelled(true);
+            event.setDamage(0.0D);
+            return;
+        }
+
         if(!config.isPvPLogger() || event.isCancelled() || finalDamage == 0) return;
 
         if(event instanceof EntityDamageByEntityEvent){

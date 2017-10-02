@@ -17,12 +17,14 @@ commands:
     delkit:
         usage: "<kitName>"
     setspawn:
-        usage: ""
     delspawn:
         usage: "<spawnId>"
     leaderboard:
         usage: "[pageID]"
         aliases: [top, records]
+    spectate:
+        usage: "[player]"
+        aliases: [spec, sp]
 permission:
     freeforall.*:
         default: op

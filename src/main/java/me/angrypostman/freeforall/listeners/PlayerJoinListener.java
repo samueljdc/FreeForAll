@@ -2,12 +2,15 @@ package me.angrypostman.freeforall.listeners;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
+import me.angrypostman.freeforall.kit.FFAKit;
+import me.angrypostman.freeforall.kit.KitManager;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Message;
 import me.angrypostman.freeforall.util.Updater;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,9 +18,11 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.PlayerInventory;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
-import static me.angrypostman.freeforall.FreeForAll.doAsync;
+import static me.angrypostman.freeforall.FreeForAll.doSyncLater;
 
 public class PlayerJoinListener implements Listener{
 
@@ -36,7 +41,7 @@ public class PlayerJoinListener implements Listener{
         Optional<User> optional=UserCache.getUserIfPresent(player);
 
         if(!optional.isPresent()){
-            player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
+            player.kickPlayer(ChatColor.RED + "Failed to load your player data, please relog.");
             return;
         }
 
@@ -60,19 +65,46 @@ public class PlayerJoinListener implements Listener{
             event.setJoinMessage(message.getContent());
         }
 
-        if (player.hasPermission("freeforall.viewupdates")){
-            doAsync(() -> {
+        UserCache.getUsers().stream().filter(User::isSpectating).forEach(online->{
+            if (player.canSee(online.getBukkitPlayer())){
+                player.hidePlayer(online.getBukkitPlayer());
+            }
+        });
 
+        doSyncLater(() -> {
+
+            if(player.hasPermission("freeforall.viewupdates")){
                 Updater updater=plugin.getUpdater();
 
                 String latestVersion=updater.getLatestVersion();
-                String latestVersionURL=updater.getLatestVersionURL();
                 if(latestVersion != null){
-                    player.sendMessage(ChatColor.GREEN+"A new version of FreeForAll is available for download (v" + latestVersion + ")!");
+                    player.sendMessage(ChatColor.GREEN + "A new version of FreeForAll is available for download (v" + latestVersion + ")!");
                 }
+            }
 
-            });
-        }
+            Location location;
+
+            List<Location> locations=dataStorage.getLocations();
+            if(locations == null || locations.size() == 0){
+                location=player.getWorld().getSpawnLocation();
+            } else{
+                Random random=new Random();
+                location=locations.get(random.nextInt(locations.size()));
+            }
+
+            player.teleport(location);
+
+            Optional<FFAKit> kitOptional=KitManager.getKitOf(player);
+            if(!kitOptional.isPresent()){
+                kitOptional=KitManager.getDefaultKit();
+                if(!kitOptional.isPresent()) return;
+            }
+
+            FFAKit ffaKit=kitOptional.get();
+            KitManager.giveItems(user, ffaKit);
+
+            //A second later should be fine for this.
+        }, 20L);
 
     }
 
