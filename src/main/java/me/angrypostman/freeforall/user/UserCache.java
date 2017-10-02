@@ -71,6 +71,10 @@ public class UserCache{
         return spectators.stream().anyMatch(user -> user.getUniqueId().equals(uuid));
     }
 
+    public static List<User> getSpectators(){
+        return new ArrayList<>(spectators);
+    }
+
     public static void setSpectating(User user, boolean spectating){
         if(spectating){
             if(!isSpectating(user)){

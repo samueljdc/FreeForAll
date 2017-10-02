@@ -122,6 +122,6 @@ public class SpectateCommand implements CommandExecutor{
 
         }
 
-        return false;
+        return true;
     }
 }

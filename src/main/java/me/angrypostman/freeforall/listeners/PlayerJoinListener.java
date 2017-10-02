@@ -65,7 +65,7 @@ public class PlayerJoinListener implements Listener{
             event.setJoinMessage(message.getContent());
         }
 
-        UserCache.getUsers().stream().filter(User::isSpectating).forEach(online->{
+        UserCache.getSpectators().forEach(online->{
             if (player.canSee(online.getBukkitPlayer())){
                 player.hidePlayer(online.getBukkitPlayer());
             }
