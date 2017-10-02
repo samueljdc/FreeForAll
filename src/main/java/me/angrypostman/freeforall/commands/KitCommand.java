@@ -39,8 +39,6 @@ public class KitCommand implements CommandExecutor{
         Player player=(Player) commandSender;
         Optional<User> userOptional=UserCache.getUserIfPresent(player);
 
-        plugin.getPluginLoader();
-
         if(!userOptional.isPresent()){
             player.sendMessage(ChatColor.RED + "Failed to load player data, please relog");
             return true;

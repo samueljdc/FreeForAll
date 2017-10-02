@@ -49,4 +49,5 @@ messages:
     player-stats-format: "&6%statistic%: %value%"
     player-stats-footer: "&7---- ---- ---- ----"
     chat-format: "[%group%] %player%: %message%"
+    banned-command-message: "&cThis command is banned during Combat"
 version: 2.23

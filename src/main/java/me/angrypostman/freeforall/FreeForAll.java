@@ -35,10 +35,6 @@ import java.util.logging.Level;
 
 public class FreeForAll extends JavaPlugin{
 
-    /*
-         1. Optional chat formatting at some point (after release)
-     */
-
     private static FreeForAll plugin;
 
     private DataStorage dataStorage=null;

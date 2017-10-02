@@ -1,7 +1,9 @@
 package me.angrypostman.freeforall.listeners;
 
 import me.angrypostman.freeforall.FreeForAll;
+import me.angrypostman.freeforall.user.Combat;
 import me.angrypostman.freeforall.util.Configuration;
+import me.angrypostman.freeforall.util.Message;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -53,6 +55,7 @@ public class PlayerListeners implements Listener{
     @EventHandler
     public void onPlayerCommandPreProcess(PlayerCommandPreprocessEvent event){
 
+        Player player=event.getPlayer();
         String message=event.getMessage();
         String[] split=message.split(" ");
         if(split.length > 0) message=split[0];
@@ -60,10 +63,17 @@ public class PlayerListeners implements Listener{
 
         PluginCommand command=plugin.getServer().getPluginCommand(message);
 
+        if (!Combat.inCombat(player)){
+            return;
+        }
+
         List<String> bannedCommands=config.getBannedCommands();
         for(String bannedCommand : bannedCommands){
             if(bannedCommand.equalsIgnoreCase(command.getName())){
-
+                Message.get("banned-command-message")
+                        .replace("%command%", command.getName())
+                        .send(player);
+                event.setCancelled(true);
             }
         }
     }

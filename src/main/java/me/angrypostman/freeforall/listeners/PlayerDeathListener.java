@@ -56,7 +56,8 @@ public class PlayerDeathListener implements Listener{
         User user=optional.get();
         UserData userData=user.getUserData();
 
-        String deathMessage=Message.get("player-death-message").replace("%player%", user.getName()).getContent();
+        String deathMessage=Message.get("player-death-message")
+                .replace("%player%", user.getName()).getContent();
         if(Combat.inCombat(user)){
 
             Damage damage=Combat.getLastDamage(user);
@@ -64,8 +65,6 @@ public class PlayerDeathListener implements Listener{
 
             UserData killerData=killer.getUserData();
 
-            //Need a better method for calculating gained/lost,
-            //Might use optional percentages or something
             int playerPoints=userData.getPoints().getValue();
 
             int gained=0;
@@ -78,7 +77,7 @@ public class PlayerDeathListener implements Listener{
 
             } else { gained=Integer.parseInt(gainedLost); }
 
-            if(gained <= 0)gained=5;
+            if(gained < 5)gained=5;
 
             int lost=(playerPoints - gained < 0 ? playerPoints : gained);
 
@@ -88,15 +87,11 @@ public class PlayerDeathListener implements Listener{
             Message.get("player-death-private-message").replace("%killer%", killer.getName()).replace("%lostPoints%", lost).send(user.getBukkitPlayer());
             Message.get("player-killed-private-message").replace("%player%", user.getName()).replace("%gainedPoints%", gained).send(killer.getBukkitPlayer());
 
-//            user.sendMessage(ChatColor.RED + "You were killed by " + killerPlayer.getName() + " and lost " + lost + " points.");
-//            killerPlayer.sendMessage(ChatColor.GREEN + "You killed " + player.getName() + " and gained " + gained + " points.");
-
             deathMessage=Message.get("player-slain-message").replace("%player%", user.getName()).replace("%killer%", killer.getName()).getContent();
             if(userData.hasKillStreak() && userData.getKillStreak().getValue() > 3){
                 deathMessage=Message.get("player-kill-streak-ended-message")
                         .replace("%player%", user.getName()).replace("%killer%", killer.getName())
                         .replace("%killStreak%", userData.getKillStreak()).getContent();
-
             }
 
             userData.endStreak();
@@ -115,8 +110,7 @@ public class PlayerDeathListener implements Listener{
             player.spigot().respawn();
             player.setGameMode(GameMode.SURVIVAL);
             player.setFoodLevel(20);
-            player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
-            player.setInvulnerable(false);
+            player.setHealth(getMaxHealth(player));
             player.setFireTicks(0);
             player.setLevel(0);
             player.setExp(0);
@@ -125,6 +119,14 @@ public class PlayerDeathListener implements Listener{
             //Doing it 5 ticks later seems to make the player properly reset
         }, 5L);
 
+    }
+
+    private double getMaxHealth(Player player){
+        try{
+            return player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
+        } catch(NoClassDefFoundError ex){
+            return player.getMaxHealth();
+        }
     }
 
 }

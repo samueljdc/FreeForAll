@@ -2,6 +2,7 @@ package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
 import me.angrypostman.freeforall.FreeForAll;
+import org.bukkit.entity.Player;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -30,6 +31,12 @@ public class Combat{
 
     public static boolean inCombat(User user){
         Damage damage=lastDamage.get(Preconditions.checkNotNull(user, "user").getUniqueId());
+        return damage != null && System.currentTimeMillis() - damage.getTimestamp() <= TimeUnit.SECONDS
+                .toMillis(plugin.getConfiguration().getPvPLoggerDuration());
+    }
+
+    public static boolean inCombat(Player player){
+        Damage damage=lastDamage.get(Preconditions.checkNotNull(player, "player").getUniqueId());
         return damage != null && System.currentTimeMillis() - damage.getTimestamp() <= TimeUnit.SECONDS
                 .toMillis(plugin.getConfiguration().getPvPLoggerDuration());
     }
