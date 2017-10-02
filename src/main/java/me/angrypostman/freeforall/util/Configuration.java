@@ -42,6 +42,8 @@ public class Configuration{
         values.put("settings.combat.gainedLost", configuration.getString("settings.combat.gainedLost"));
 
         values.put("settings.combat.bannedCommands", configuration.getStringList("settings.combat.bannedCommands"));
+        values.put("settings.chat.chatFormatting", configuration.getBoolean("settings.chat.chatFormatting"));
+        values.put("settings.chat.chatFormat", configuration.getStringList("settings.chat.chatFormat"));
 
 //        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
 //        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
@@ -89,6 +91,14 @@ public class Configuration{
 
     public List<String> getBannedCommands(){
         return (List<String>) values.get("settings.combat.bannedCommands");
+    }
+
+    public boolean isChatFormatting(){
+        return (boolean)values.get("settings.chat.chatFormatting");
+    }
+
+    public String getChatFormat(){
+        return (String)values.get("settings.chat.chatFormat");
     }
 
     public String getVersion(){

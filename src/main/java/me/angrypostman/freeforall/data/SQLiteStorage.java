@@ -151,7 +151,6 @@ public class SQLiteStorage extends DataStorage{
     public void close(){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
-        Preconditions.checkArgument(isLoaded(), "cannot shutdown data storage as data storage " + "is not initialized");
 
         plugin.getLogger().info("Performing DataStorage shutdown...");
 
@@ -226,13 +225,6 @@ public class SQLiteStorage extends DataStorage{
                 }
             }
 
-            if(connection != null){
-                try{
-                    connection.close();
-                } catch(SQLException ignored){
-                }
-            }
-
         }
 
         return Optional.empty();
@@ -287,13 +279,6 @@ public class SQLiteStorage extends DataStorage{
             if(statement != null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
-                }
-            }
-
-            if(connection != null){
-                try{
-                    connection.close();
                 } catch(SQLException ignored){
                 }
             }
@@ -356,13 +341,6 @@ public class SQLiteStorage extends DataStorage{
                 }
             }
 
-            if(connection != null){
-                try{
-                    connection.close();
-                } catch(SQLException ignored){
-                }
-            }
-
         }
 
         return Optional.empty();
@@ -401,13 +379,6 @@ public class SQLiteStorage extends DataStorage{
             if(statement != null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
-                }
-            }
-
-            if(connection != null){
-                try{
-                    connection.close();
                 } catch(SQLException ignored){
                 }
             }
@@ -462,13 +433,6 @@ public class SQLiteStorage extends DataStorage{
                 }
             }
 
-            if(connection != null){
-                try{
-                    connection.close();
-                } catch(SQLException ignored){
-                }
-            }
-
         }
 
         return leaderboard;
@@ -509,13 +473,6 @@ public class SQLiteStorage extends DataStorage{
             if(statement != null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
-                }
-            }
-
-            if(connection != null){
-                try{
-                    connection.close();
                 } catch(SQLException ignored){
                 }
             }
@@ -563,13 +520,6 @@ public class SQLiteStorage extends DataStorage{
                 }
             }
 
-            if(connection != null){
-                try{
-                    connection.close();
-                } catch(SQLException ignored){
-                }
-            }
-
         }
 
     }
@@ -584,6 +534,7 @@ public class SQLiteStorage extends DataStorage{
         try{
             return connection != null && !connection.isClosed();
         } catch (SQLException ex){
+            ex.printStackTrace();
             return false;
         }
     }

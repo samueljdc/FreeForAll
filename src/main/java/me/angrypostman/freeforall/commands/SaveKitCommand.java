@@ -42,7 +42,6 @@ public class SaveKitCommand implements CommandExecutor{
         }
 
         Player player=(Player) commandSender;
-
         PlayerInventory inventory=player.getInventory();
 
         if(args.length < 1){

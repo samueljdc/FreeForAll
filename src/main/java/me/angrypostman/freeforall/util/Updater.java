@@ -56,7 +56,7 @@ public class Updater{
             if(!checkHigher(currentVersion, version)) return;
 
             this.latestVersion=version;
-            this.latestVersionURL=SPIGOT_URL + object.get("url").getAsString();
+            this.latestVersionURL=SPIGOT_URL + "/" + object.get("url").getAsString();
             this.latestVersionURL=latestVersionURL.replace("\\", "");
 
         }

@@ -47,14 +47,17 @@ public class EntityDamageListener implements Listener{
             EntityDamageByEntityEvent evt=(EntityDamageByEntityEvent) event;
 
             Entity damager=evt.getDamager();
-            Optional<User> attacker=null;
+            Optional<User> attacker=Optional.empty();
 
             if(damager instanceof Player){
                 attacker=UserCache.getUserIfPresent(damager.getUniqueId());
             } else if(damager instanceof Projectile){
                 Projectile projectile=(Projectile) damager;
                 if(projectile.getShooter() instanceof Player){
-                    attacker=UserCache.getUserIfPresent(((Player) projectile.getShooter()).getUniqueId());
+                    Player shooter = (Player) projectile.getShooter();
+                    if (!shooter.getUniqueId().equals(player.getUniqueId())){
+                        attacker=UserCache.getUserIfPresent(((Player) projectile.getShooter()).getUniqueId());
+                    }
                 }
             } else if(damager instanceof TNTPrimed){
                 TNTPrimed tntPrimed=(TNTPrimed) damager;
@@ -63,12 +66,13 @@ public class EntityDamageListener implements Listener{
                 }
             } else if(damager instanceof Tameable){
                 Tameable tameable=(Tameable) damager;
-                if(tameable.getOwner() != null && tameable.getOwner() instanceof Player && !tameable.getOwner().getUniqueId().equals(player.getUniqueId())){
+                if(tameable.getOwner() != null && tameable.getOwner() instanceof Player &&
+                        !tameable.getOwner().getUniqueId().equals(player.getUniqueId())){
                     attacker=UserCache.getUserIfPresent(tameable.getOwner().getUniqueId());
                 }
             }
 
-            if(attacker != null && attacker.isPresent()){
+            if(attacker.isPresent()){
                 Damage damage=new Damage(user, attacker.get(), finalDamage);
                 Combat.setLastDamage(user, damage);
             }

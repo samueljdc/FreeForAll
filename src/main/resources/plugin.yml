@@ -3,6 +3,7 @@ version: 2.23
 main: me.angrypostman.freeforall.FreeForAll
 description: "Free for all, fight in a battle to become the number one"
 author: AngryPostman
+softdepend: [Vault]
 
 commands:
     stats:

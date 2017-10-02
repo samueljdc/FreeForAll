@@ -12,6 +12,7 @@ import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Configuration;
 import me.angrypostman.freeforall.util.Message;
 import me.angrypostman.freeforall.util.Updater;
+import net.milkbowl.vault.chat.Chat;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -20,6 +21,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.permissions.ServerOperator;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -42,6 +44,8 @@ public class FreeForAll extends JavaPlugin{
     private DataStorage dataStorage=null;
     private Configuration configuration=null;
     private Updater updater=null;
+    private boolean isVault;
+    private Chat chat;
 
     //We want every Runnable that we schedule to be logged
     //So we can later forcibly run them on shutdown
@@ -183,6 +187,18 @@ public class FreeForAll extends JavaPlugin{
 
         Message.load(getConfig());
 
+        isVault = getServer().getPluginManager().getPlugin("Vault")!=null;
+        if(isVault){
+            RegisteredServiceProvider<Chat> provider=getServer().getServicesManager().getRegistration(Chat.class);
+            if (provider.getProvider()==null){
+                getLogger().info("Vault was found but failed to get provider for "+Chat.class);
+                isVault = false;
+            } else {
+                chat = provider.getProvider();
+            }
+        } else {
+            getLogger().info("Vault was not found during plugin startup procedure, chat support will be disabled");
+        }
 
         String storageMethod=configuration.getStorageMethod();
 //        if(storageMethod.equalsIgnoreCase("yaml") || storageMethod.equalsIgnoreCase("yml")){
@@ -265,6 +281,7 @@ public class FreeForAll extends JavaPlugin{
         manager.registerEvents(new PlayerQuitListener(this), this);
         manager.registerEvents(new PlayerRespawnListener(this), this);
         manager.registerEvents(new PlayerListeners(this), this);
+        manager.registerEvents(new PlayerChatListener(this), this);
 
         getLogger().info("FreeForAll is currently listening to " + HandlerList
                 .getRegisteredListeners(this).size() + " events!");
@@ -303,8 +320,6 @@ public class FreeForAll extends JavaPlugin{
             }
 
         }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
-
-        System.out.println(getConfig().getClass().getCanonicalName());
 
         configuration.set("version", getDescription().getVersion());
         configuration.saveConfiguration();
@@ -354,6 +369,10 @@ public class FreeForAll extends JavaPlugin{
         FreeForAll.plugin=null;
     }
 
+    public String getVersion(){
+        return configuration.getVersion();
+    }
+
     public Configuration getConfiguration(){
         return configuration;
     }
@@ -376,6 +395,14 @@ public class FreeForAll extends JavaPlugin{
 
     public Updater getUpdater(){
         return updater;
+    }
+
+    public boolean hasVault(){
+        return isVault;
+    }
+
+    public Chat getChat(){
+        return chat;
     }
 
     private void syncConfig(ConfigurationSection from, ConfigurationSection to){

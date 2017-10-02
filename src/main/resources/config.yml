@@ -17,6 +17,8 @@ settings:
         pvpLogger: false
         pvpLoggerDuration: 15
         gainedLost: 20
+    chat:
+        chatFormatting: false
     defaultKit: "KIT_NAME_HERE"
 messages:
     join-message-broadcast: "&a%player% has joined the battlefield"
@@ -46,4 +48,5 @@ messages:
     player-stats-heading: "&7---- &3%player%'s stats &7----"
     player-stats-format: "&6%statistic%: %value%"
     player-stats-footer: "&7---- ---- ---- ----"
+    chat-format: "[%group%] %player%: %message%"
 version: 2.23
