@@ -30,6 +30,24 @@ public class EntityDamageListener implements Listener{
     @EventHandler
     public void onEntityDamage(EntityDamageEvent event){
 
+        Entity entity=event.getEntity();
+        if (!(entity instanceof Player))return;
+
+        Player player=(Player)entity;
+        Optional<User> optional=UserCache.getUserIfPresent(player);
+
+        if (!optional.isPresent())return;
+
+        User user=optional.get();
+        if (user.isSpectating()){
+            event.setCancelled(true);
+        }
+
+    }
+
+    @EventHandler
+    public void onEntityDamageByEntity(EntityDamageEvent event){
+
         if(!(event.getEntity() instanceof Player)) return;
 
         Player player=(Player) event.getEntity();
@@ -43,7 +61,6 @@ public class EntityDamageListener implements Listener{
 
         if (user.isSpectating()){
             event.setCancelled(true);
-            event.setDamage(0.0D);
             return;
         }
 
@@ -83,11 +100,10 @@ public class EntityDamageListener implements Listener{
                 User enemy = attacker.get();
                 if (enemy.isSpectating()){
                     event.setCancelled(true);
-                    event.setDamage(0.0D);
-                    return;
+                }else{
+                    Damage damage=new Damage(user, enemy, finalDamage);
+                    Combat.setLastDamage(user, damage);
                 }
-                Damage damage=new Damage(user, attacker.get(), finalDamage);
-                Combat.setLastDamage(user, damage);
             }
 
         }

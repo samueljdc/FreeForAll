@@ -2,6 +2,7 @@ package me.angrypostman.freeforall.commands;
 
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
+import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Message;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -36,6 +37,11 @@ public class DelSpawnCommand implements CommandExecutor{
         }
 
         Player player=(Player) commandSender;
+
+        if (UserCache.isSpectating(player)){
+            Message.get("no-permission-while-spectating").send(player);
+            return true;
+        }
 
         if(args.length < 1){
             Message.get("correct-usage-message").replace("%commandName%",

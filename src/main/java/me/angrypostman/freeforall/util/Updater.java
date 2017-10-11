@@ -14,8 +14,8 @@ import java.net.URL;
 
 public class Updater{
 
-    private static final String SPIGET_URL="https://api.spiget.org";
-    private static final String SPIGOT_URL="https://spigot.org";
+    private static final String SPIGET_URL="https://api.spiget.org/";
+    private static final String SPIGOT_URL="https://spigot.org/";
     private static final int RESOURCE_ID=81;
 
     private FreeForAll plugin=null;
@@ -32,7 +32,7 @@ public class Updater{
 
     public void checkUpdate(String currentVersion) throws IOException{
 
-        URL url=new URL(String.format("%s/v2/resources/%s/versions", SPIGET_URL, RESOURCE_ID));
+        URL url=new URL(String.format("%sv2/resources/%s/versions", SPIGET_URL, RESOURCE_ID));
 
         HttpURLConnection connection=(HttpURLConnection) url.openConnection();
         connection.addRequestProperty("Content-Type", "text/json");

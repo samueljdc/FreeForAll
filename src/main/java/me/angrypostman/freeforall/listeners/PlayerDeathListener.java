@@ -97,6 +97,7 @@ public class PlayerDeathListener implements Listener{
             userData.endStreak();
             killerData.addKill();
 
+            Combat.setLastDamage(killer, null);
             Combat.setLastDamage(user, null);
 
         }

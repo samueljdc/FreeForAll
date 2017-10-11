@@ -45,12 +45,6 @@ public class Configuration{
         values.put("settings.chat.chatFormatting", configuration.getBoolean("settings.chat.chatFormatting"));
         values.put("settings.chat.chatFormat", configuration.getStringList("settings.chat.chatFormat"));
 
-//        values.put("settings.world.disableWeatherChange", configuration.getBoolean("settings.world.disableWeatherChange"));
-//        values.put("settings.world.disableBlockPlace", configuration.getBoolean("settings.world.disableBlockPlace"));
-//        values.put("settings.world.disableBlockDestroy", configuration.getBoolean("settings.world.disableBlockDestroy"));
-//        values.put("settings.world.disableCreatureSpawn", configuration.getBoolean("settings.world.disableCreatureSpawn"));
-//        values.put("settings.world.disableExplosionDestroy", configuration.getBoolean("settings.world.disableExplosionDestroy"));
-
         values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
         values.put("version", configuration.getString("version"));
 
@@ -99,6 +93,10 @@ public class Configuration{
 
     public String getChatFormat(){
         return (String)values.get("settings.chat.chatFormat");
+    }
+
+    public boolean isDebugMode(){
+        return (boolean)values.get("settings.debugMode");
     }
 
     public String getVersion(){

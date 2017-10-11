@@ -3,6 +3,7 @@ package me.angrypostman.freeforall.commands;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.kit.FFAKit;
 import me.angrypostman.freeforall.kit.KitManager;
+import me.angrypostman.freeforall.user.UserCache;
 import me.angrypostman.freeforall.util.Message;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -30,6 +31,11 @@ public class DelKitCommand implements CommandExecutor{
         }
 
         Player player=(Player) commandSender;
+
+        if (UserCache.isSpectating(player)){
+            Message.get("no-permission-while-spectating").send(player);
+            return true;
+        }
 
         if(args.length < 1){
             Message.get("correct-usage-message")

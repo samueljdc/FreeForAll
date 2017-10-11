@@ -46,9 +46,13 @@ public class KitCommand implements CommandExecutor{
 
         User user=userOptional.get();
 
+        if (user.isSpectating()){
+            Message.get("no-permission-while-spectating").send(player);
+            return true;
+        }
+
         if (Combat.hasBeenInCombat(user)){
-            Message.get("combat-kit-change-message")
-                    .send(player);
+            Message.get("combat-kit-change-message").send(player);
             return true;
         }
 

@@ -52,6 +52,15 @@ public class SpectateCommand implements CommandExecutor{
         User user=optional.get();
         if (user.isSpectating()){
 
+            if (args.length > 0){
+                Player target=Bukkit.getPlayer(args[0]);
+                if(target!=null&&target.isOnline()
+                        &&target!=player &&!UserCache.isSpectating(target)){
+                    player.teleport(target);
+                }
+                return true;
+            }
+
             Bukkit.getOnlinePlayers().forEach(online->{
                 if (!online.canSee(player)){
                     online.showPlayer(player);

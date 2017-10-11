@@ -34,7 +34,7 @@ public class PlayerLoginListener implements Listener{
             optional=storage.createUser(playerUUID, playerName);
             if(!optional.isPresent()){
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to generate player data, please relog");
-                plugin.getLogger().info("An error occurred whilst generating player data for '" + playerName + "'");
+                plugin.getPluginLogger().info("An error occurred whilst generating player data for '" + playerName + "'");
                 return;
             }
         }

@@ -20,13 +20,14 @@ settings:
     chat:
         chatFormatting: false
     defaultKit: "KIT_NAME_HERE"
+    debugMode: false
 messages:
     join-message-broadcast: "&a%player% has joined the battlefield"
     quit-message-broadcast: "&c%player% has left"
     quit-message-combat-log-broadcast: "&c%player% is a sore loser and left while in combat"
     correct-usage-message: "&cCorrect usage: &7/%commandName% %usage%"
     no-permission-message: "&cYou don't have permission perform this action"
-    unknown-kit-message: "&cUnknown kit '%kitName'"
+    unknown-kit-message: "&cUnknown kit '%kitName%'"
     kit-given-message: "&aYou have received the '%kitName%' kit"
     kit-created-message: "&aThe kit '%kitName%' has been created!"
     kit-deleted-message: "&aThe kit '%kitName' has been deleted!"
@@ -34,7 +35,7 @@ messages:
     kit-permission-nodes-unique-message: "&cKit permission nodes must be unique"
     invalid-permission-node: "&cInvalid permission node"
     combat-kit-change-message: "&cYou cannot change your kit whilst in combat."
-    player-death-message: "&%player% has died!"
+    player-death-message: "&c%player% has died!"
     player-death-private-message: "&cYou have been slain by %killer% and lost %lostPoints% points"
     player-killed-private-message: "&aYou have killed %player% and gained %gainedPoints% points"
     player-slain-message: "&c%player% has been slain by %killer%"
@@ -52,5 +53,6 @@ messages:
     spectator-enabled-message: "&aSpectator mode has been enabled."
     spectator-disabled-message: "&cSpectator mode has been disabled"
     spectator-in-combat-message: "&cYou cannot enable spectator mode if you have been in combat."
+    no-permission-while-spectating: "&cYou cannot perform this action whilst in Spectator mode."
     banned-command-message: "&cThis command is banned during Combat"
 version: 2.23
