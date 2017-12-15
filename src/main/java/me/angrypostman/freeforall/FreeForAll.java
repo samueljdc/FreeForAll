@@ -212,8 +212,7 @@ public class FreeForAll extends JavaPlugin{
                 getPluginLoader().disablePlugin(this);
                 return;
             } else if(username.equals("root")){ //So many people use "root" for accessing their database... plsno
-                getLogger().info("It is not recommended to use the root account to access your database.");
-                getLogger().info("If anyone were to have access to this plugins configuration file " + "this would give them administrative access to all of your databases.");
+                getLogger().info("Please refrain from using the root account to access your databases.");
             }
 
             dataStorage=new MySQLStorage(this, host, database, username, password, port);
