@@ -36,6 +36,8 @@ public class Configuration{
         values.put("storage.mysql.port", configuration.getInt("storage.mysql.port"));
         values.put("storage.sqlite.dataFile", configuration.getString("storage.sqlite.dataFile"));
 
+        values.put("settings.debugMode", configuration.getBoolean("settings.debugMode"));
+
         values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
         values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
         values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));

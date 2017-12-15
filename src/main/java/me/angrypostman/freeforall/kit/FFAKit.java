@@ -21,6 +21,10 @@ public class FFAKit{
     private List<ItemStack> inventoryItems=null;
     private List<PotionEffect> potionEffects=null;
 
+    public FFAKit(String name){
+        this(name, null);
+    }
+
     public FFAKit(String name, String permission){
         this.name=name;
         this.permission=permission;
@@ -36,6 +40,10 @@ public class FFAKit{
 
     public String getPermission(){
         return permission;
+    }
+
+    public void setPermission(String permission){
+        this.permission=permission;
     }
 
     public ItemStack getHelmet(){

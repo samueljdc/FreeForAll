@@ -35,7 +35,7 @@ public class Updater{
         URL url=new URL(String.format("%sv2/resources/%s/versions", SPIGET_URL, RESOURCE_ID));
 
         HttpURLConnection connection=(HttpURLConnection) url.openConnection();
-        connection.addRequestProperty("Content-Type", "text/json");
+        connection.addRequestProperty("Content-Type", "application/json");
         connection.addRequestProperty("User-Agent", "Mozilla/5.0"); // Mozilla 5.0 User-Agent
         connection.setUseCaches(false);
         connection.setDoOutput(true);

@@ -11,6 +11,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import static me.angrypostman.freeforall.FreeForAll.doAsync;
+import static me.angrypostman.freeforall.FreeForAll.doSync;
 
 public class SetSpawnCommand implements CommandExecutor{
 
@@ -32,10 +33,12 @@ public class SetSpawnCommand implements CommandExecutor{
         }
 
         Player player=(Player) commandSender;
+
         Location playerLocation=player.getLocation();
+
         doAsync(() -> {
             dataStorage.saveLocation(playerLocation);
-            Message.get("spawn-saved-message").send(player);
+            doSync(()->Message.get("spawn-saved-message").send(player));
         });
 
         return true;

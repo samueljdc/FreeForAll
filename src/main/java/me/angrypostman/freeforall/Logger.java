@@ -29,7 +29,7 @@ public class Logger extends PluginLogger{
             this.outputStream=initOutputStream(new File(this.context.getDataFolder(), "debug.txt"));
         }
         try{
-            this.outputStream.write((logRecord.getMessage()+System.lineSeparator()).getBytes());
+            this.outputStream.write((logRecord.getMessage()+System.lineSeparator()).substring(13).getBytes());
         } catch(IOException ignored){}
     }
 

@@ -23,7 +23,7 @@ public class PlayerChatListener implements Listener{
     public PlayerChatListener(FreeForAll plugin){
         this.plugin=plugin;
         this.config=plugin.getConfiguration();
-        this.chat=plugin.getChat();
+        this.chat=plugin.getChatManager();
     }
 
 
@@ -32,7 +32,7 @@ public class PlayerChatListener implements Listener{
 
         //If vault was not detected on server startup, or chat support is disabled
         //then ignore the chat event
-        if(!plugin.hasVault() || config.isChatFormatting()) return;
+        if(config.isChatFormatting() || !plugin.hasVault()) return;
 
         Player player=event.getPlayer();
         Optional<User> optional=UserCache.getUserIfPresent(player);

@@ -32,6 +32,8 @@ public class KitManager{
 
     public static void loadKits(){
 
+        KitManager.kits.clear();
+
         FileConfiguration config=plugin.getConfig();
         ConfigurationSection section=config.getConfigurationSection("kits");
 
@@ -158,7 +160,7 @@ public class KitManager{
 
     public static void registerKit(FFAKit kit){
         Preconditions.checkNotNull(kit, "kit");
-        Preconditions.checkArgument(getKit(kit.getName()) == null, "kit already defined");
+        Preconditions.checkArgument(!getKit(kit.getName()).isPresent(), "kit already defined");
         KitManager.kits.add(kit);
     }
 
@@ -211,7 +213,7 @@ public class KitManager{
         section.set(lowerCase + ".potionEffects", seralizedPotions);
         plugin.saveConfig();
 
-        if (getKit(kit.getName())==null){
+        if(!getKit(kit.getName()).isPresent()){
             registerKit(kit);
         }
 

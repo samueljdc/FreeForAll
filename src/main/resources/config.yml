@@ -19,6 +19,7 @@ settings:
         gainedLost: 20
     chat:
         chatFormatting: false
+        chatFormat: "&8[&7%group%&8] &7%player%: &f%content%"
     defaultKit: "KIT_NAME_HERE"
     debugMode: false
 messages:

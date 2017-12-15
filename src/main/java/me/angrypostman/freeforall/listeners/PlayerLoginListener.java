@@ -24,7 +24,11 @@ public class PlayerLoginListener implements Listener{
     @EventHandler
     public void onAsyncPreLogin(AsyncPlayerPreLoginEvent event){
 
-        if(event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) return;
+        if(event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
+            plugin.getLogger().info("Player "+event.getName()+"("+event.getUniqueId()+") was denied access during login, " +
+                    "ignoring this player.");
+            return;
+        }
 
         String playerName=event.getName();
         UUID playerUUID=event.getUniqueId();
@@ -34,7 +38,7 @@ public class PlayerLoginListener implements Listener{
             optional=storage.createUser(playerUUID, playerName);
             if(!optional.isPresent()){
                 event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to generate player data, please relog");
-                plugin.getPluginLogger().info("An error occurred whilst generating player data for '" + playerName + "'");
+                plugin.getLogger().info("An error occurred whilst generating player data for '" + playerName + "'");
                 return;
             }
         }

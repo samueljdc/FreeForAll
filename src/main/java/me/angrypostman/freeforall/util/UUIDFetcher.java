@@ -112,7 +112,6 @@ public class UUIDFetcher implements Callable<Map<String, UUID>>{
                 UUID uuid=UUIDFetcher.getUUID(id);
                 uuidMap.put(name, uuid);
             }
-
             if(rateLimiting && i != requests - 1) Thread.sleep(100L);
         }
         return uuidMap;

@@ -28,7 +28,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,11 +44,6 @@ public class FreeForAll extends JavaPlugin{
     private Updater updater=null;
     private boolean isVault;
     private Chat chat;
-    private Logger pluginLogger;
-
-    public FreeForAll(){
-        this.pluginLogger=new Logger(this);
-    }
 
     //We want every Runnable that we schedule to be logged
     //So we can later forcibly run them on shutdown
@@ -66,7 +60,7 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     ex.getCause().printStackTrace();
                 }
             }
@@ -81,13 +75,14 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     ex.getCause().printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
             }
         };
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
         bukkitRunnable.runTaskLaterAsynchronously(plugin, ticksLater);
     }
 
@@ -98,13 +93,13 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     plugin.cancelTask(this.getTaskId());
                     ex.getCause().printStackTrace();
                 }
             }
         };
-        plugin.getRunnables().add(bukkitRunnable);
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
         bukkitRunnable.runTaskTimerAsynchronously(plugin, startAfterTicks, repeatDelayTicks);
     }
 
@@ -115,7 +110,7 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     ex.getCause().printStackTrace();
                 }
             }
@@ -130,14 +125,14 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     ex.getCause().printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
             }
         };
-        plugin.getRunnables().add(bukkitRunnable);
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
         bukkitRunnable.runTaskLater(plugin, ticksLater);
     }
 
@@ -148,13 +143,13 @@ public class FreeForAll extends JavaPlugin{
                 try{
                     runnable.run();
                 } catch(Throwable ex){
-                    plugin.getPluginLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
+                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
                     plugin.cancelTask(this.getTaskId());
                     ex.getCause().printStackTrace();
                 }
             }
         };
-        plugin.getRunnables().add(bukkitRunnable);
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
         bukkitRunnable.runTaskTimer(plugin, startAfterTicks, repeatDelayTicks);
     }
 
@@ -167,25 +162,25 @@ public class FreeForAll extends JavaPlugin{
 
         FreeForAll.plugin=this;
 
-        getPluginLogger().info("Performing plugin startup procedure...");
+        getLogger().info("Performing plugin startup procedure...");
 
-        getPluginLogger().info("Checking for configuration file in plugin data folder...");
+        getLogger().info("Checking for configuration file in plugin data folder...");
         if(!new File(getDataFolder(), "config.yml").exists()){
-            getPluginLogger().info("Failed to find configuration, saving default config...");
+            getLogger().info("Failed to find configuration, saving default config...");
             saveDefaultConfig();
         }
 
-        getPluginLogger().info("Validating configuration file...");
+        getLogger().info("Validating configuration file...");
         try{
             YamlConfiguration config=new YamlConfiguration();
             config.load(new BufferedReader(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8)));
             syncConfig(config, getConfig());
             saveConfig();
         } catch(Exception e){
-            getPluginLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
+            getLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
         }
 
-        getPluginLogger().info("Loading configuration values...");
+        getLogger().info("Loading configuration values...");
         configuration=new Configuration(this);
         configuration.load();
 
@@ -195,49 +190,59 @@ public class FreeForAll extends JavaPlugin{
         if(isVault){
             RegisteredServiceProvider<Chat> provider=getServer().getServicesManager().getRegistration(Chat.class);
             if(provider.getProvider() == null){
-                getPluginLogger().info("Vault was found but failed to get service provider for " + Chat.class);
+                getLogger().info("Vault was found but failed to get service provider for " + Chat.class);
                 isVault=false;
             } else{
                 chat=provider.getProvider();
-                getPluginLogger().info("Successfully hooked into Vault");
+                getLogger().info("Successfully hooked into Vault");
             }
-        } else{
-            getPluginLogger().info(!configuration.isChatFormatting() ? "Chat formatting is disabled in config.yml, " + "set chatFormatting: true in config.yml to enable this feature" : "Chat formatting is enabled but Vault was not found, chat formatting will not work without Vault installed.");
         }
 
         String storageMethod=configuration.getStorageMethod();
         if(storageMethod.equalsIgnoreCase("mysql")){
-            getPluginLogger().info("This plugin is setup using the MYSQL storage method, retrieving MySQL details...");
+            getLogger().info("This plugin is setup using the MYSQL storage method, retrieving MySQL details...");
             String host=configuration.getSQLHost();
             String database=configuration.getSQLDatabase();
             String username=configuration.getSQLUser();
             String password=configuration.getSQLPassword();
             Integer port=configuration.getSQLPort();
+
+            if(host.isEmpty() || database.isEmpty() || username.isEmpty() || port == 0){
+                getLogger().info("MySQL details improperly configured.");
+                getPluginLoader().disablePlugin(this);
+                return;
+            } else if(username.equals("root")){ //So many people use "root" for accessing their database... plsno
+                getLogger().info("It is not recommended to use the root account to access your database.");
+                getLogger().info("If anyone were to have access to this plugins configuration file " + "this would give them administrative access to all of your databases.");
+            }
+
             dataStorage=new MySQLStorage(this, host, database, username, password, port);
         } else if(storageMethod.equalsIgnoreCase("sqlite")){
-            getPluginLogger().info("This plugin is setup using the SQLITE storage method (flat file), retrieving SQLITE data file...");
+            getLogger().info("This plugin is setup using the SQLITE storage method (flat file), retrieving SQLITE data file...");
             File file=configuration.getSQLiteDataFile();
             dataStorage=new SQLiteStorage(this, file);
         } else{
-            getPluginLogger().info("Unknown storage method \"" + storageMethod + "\".");
-            getPluginLogger().info("Valid storage methods include: mysql and sqlite");
+            getLogger().info("Unknown storage method \"" + storageMethod + "\".");
+            getLogger().info("Valid storage methods include: mysql and sqlite");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
 
-        getPluginLogger().info("Initializing plugin data storage...");
+        getLogger().info("Initializing plugin data storage...");
         if(!dataStorage.initialize()){
-            getPluginLogger().info("Failed to initialize plugin data storage, please check the logs for further details.");
+            getLogger().info("Failed to initialize plugin data storage, please check the logs for further details.");
             getPluginLoader().disablePlugin(this);
             return;
         }
 
+        getLogger().info("Loading kits...");
         KitManager.loadKits();
+        getLogger().info("Loaded " + KitManager.getKits().size() + " kits!");
 
         int online=getServer().getOnlinePlayers().size();
         if(online > 0){
-            getPluginLogger().info("Server reload detected, please refrain from doing this in the future as this can " + "massively impair server performance.");
-            getPluginLogger().info("Attempting to load user data of " + online + " players, this may take a while...");
+            getLogger().info("Server reload detected, please refrain from doing this in the future as this can " + "massively impair server performance.");
+            getLogger().info("Attempting to load user data of " + online + " players, this may take a while...");
 
             for(Player player : getServer().getOnlinePlayers()){
                 UUID uniqueId=player.getUniqueId();
@@ -246,7 +251,7 @@ public class FreeForAll extends JavaPlugin{
                 if(!optional.isPresent()){ //Should always be false
                     optional=dataStorage.createUser(uniqueId, player.getName());
                     if(!optional.isPresent()){
-                        getPluginLogger().info("Failed to generate user data for '" + player.getName() + "'!");
+                        getLogger().info("Failed to generate user data for '" + player.getName() + "'!");
                         player.kickPlayer(ChatColor.RED + "Failed to generate player data, please relog.");
                         continue;
                     }
@@ -262,11 +267,11 @@ public class FreeForAll extends JavaPlugin{
 
             //In the event that some peoples player data failed to load we only show the amount
             //that actually got loaded
-            getPluginLogger().info("Loaded data of " + UserCache.getUsers().size() + "/" + online + " players.");
+            getLogger().info("Loaded data of " + UserCache.getUsers().size() + "/" + online + " players.");
 
         }
 
-        getPluginLogger().info("Registering event listeners...");
+        getLogger().info("Registering event listeners...");
 
         PluginManager manager=getServer().getPluginManager();
         manager.registerEvents(new EntityDamageListener(this), this);
@@ -278,9 +283,9 @@ public class FreeForAll extends JavaPlugin{
         manager.registerEvents(new PlayerListeners(this), this);
         manager.registerEvents(new PlayerChatListener(this), this);
 
-        getPluginLogger().info("Event listeners registered!");
+        getLogger().info("Event listeners registered!");
 
-        getPluginLogger().info("Registering commands...");
+        getLogger().info("Registering commands...");
 
         //Might convert to using custom command handler at some point,
         getCommand("stats").setExecutor(new StatsCommand(this));
@@ -293,45 +298,55 @@ public class FreeForAll extends JavaPlugin{
         getCommand("delspawn").setExecutor(new DelSpawnCommand(this));
         getCommand("spectate").setExecutor(new SpectateCommand(this));
 
-        getPluginLogger().info("Commands registered!");
+        getLogger().info("Commands registered!");
 
+        getLogger().info("Starting cache cleaner...");
         doSyncRepeating(() -> {
 
-            //Cleanup unused data
+            int cleanupCount=0;
+
             for(User user : UserCache.getUsers()){
                 Player player=user.getBukkitPlayer();
                 long downloadTime=user.getDownloadTime();
                 if(player == null || !player.isOnline()){
                     if(System.currentTimeMillis() - downloadTime >= TimeUnit.MINUTES.toMillis(10)){
                         UserCache.expireUser(user);
+                        cleanupCount++;
                     }
                 }
             }
 
+            if(cleanupCount > 0){
+                getLogger().info("Cleaned up " + cleanupCount + " users from memory.");
+            }
+
         }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
 
+        getLogger().info("Updating saved version string in config to current version...");
         configuration.set("version", getDescription().getVersion());
         configuration.saveConfiguration();
 
-        getPluginLogger().info("Plugin startup procedure complete!");
+        getLogger().info("Plugin startup procedure complete!");
         updater=new Updater(this);
         doAsyncRepeating(() -> {
 
-            plugin.getPluginLogger().info("Checking for available updates...");
+            plugin.getLogger().info("Checking for available updates...");
             try{
                 PluginDescriptionFile description=plugin.getDescription();
                 updater.checkUpdate(description.getVersion());
             } catch(IOException ex){
-                throw new Error(ex);
+                plugin.getLogger().info("An error occurred whilst checking for updates.");
+                plugin.getLogger().info("Message: " + ex.getMessage());
+
             }
 
             String latestVersion=updater.getLatestVersion();
             String latestVersionURL=updater.getLatestVersionURL();
             if(latestVersion != null){
-                plugin.getPluginLogger().info("A new version of FreeForAll is available for download (v" + latestVersion + ")!");
-                plugin.getPluginLogger().info("Download it now at: " + latestVersionURL);
+                plugin.getLogger().info("A new version of FreeForAll is available for download (v" + latestVersion + ")!");
+                plugin.getLogger().info("Download it now at: " + latestVersionURL);
             } else{
-                plugin.getPluginLogger().info("FreeForAll is currently up to date (running v" + configuration.getVersion() + ")");
+                plugin.getLogger().info("FreeForAll is currently up to date (running v" + configuration.getVersion() + ")");
             }
         }, 0L, 60 * 60 * 6 * 20);
 
@@ -339,32 +354,33 @@ public class FreeForAll extends JavaPlugin{
 
     @Override
     public void onDisable(){
-        getPluginLogger().info("Performing plugin shutdown procedure...");
+        getLogger().info("Performing plugin shutdown procedure...");
+
         if(this.dataStorage != null) this.dataStorage.close();
         if(this.configuration != null) this.configuration.unload();
 
-        if(this.runnables.size() > 0){ //Force all remaining tasks to run
-            getPluginLogger().info("Shutting down " + runnables.size() + " tasks...");
-            getRunnables().forEach(runnable -> cancelTask(runnable.getTaskId(), true));
-        }
+        this.runnables.forEach(runnable->{
+
+        });
 
         //Cancel all tasks
         getServer().getScheduler().cancelTasks(this);
 
-        getPluginLogger().info("Un-registering event listeners...");
+        getLogger().info("Un-registering event listeners...");
         HandlerList.unregisterAll(this);
-        getPluginLogger().info("Plugin shutdown procedure complete!");
 
-        try{
-            this.pluginLogger.getOutputStream().flush();
-        } catch(IOException ignored){}
+        this.runnables.clear();
 
-        this.pluginLogger=null;
+        this.chat=null;
+        this.updater=null;
+        this.configuration=null;
+        this.dataStorage=null;
+        this.isVault=false;
+
         FreeForAll.plugin=null;
-    }
 
-    public Logger getPluginLogger(){
-        return this.pluginLogger;
+        getLogger().info("Plugin shutdown procedure complete!");
+
     }
 
     public String getVersion(){
@@ -376,19 +392,7 @@ public class FreeForAll extends JavaPlugin{
     }
 
     public void cancelTask(int taskId){
-        cancelTask(taskId, false);
-    }
-
-    public void cancelTask(int taskId, boolean shouldComplete){
-        runnables.stream().filter(runnable -> runnable.getTaskId() == taskId).findFirst().ifPresent(runnable -> {
-            if(shouldComplete) runnable.run();
-            runnable.cancel();
-            runnables.remove(runnable);
-        });
-    }
-
-    public List<BukkitRunnable> getRunnables(){
-        return new ArrayList<>(runnables);
+        this.runnables.removeIf(runnable->runnable.getTaskId()==taskId);
     }
 
     public Updater getUpdater(){
@@ -399,7 +403,7 @@ public class FreeForAll extends JavaPlugin{
         return isVault;
     }
 
-    public Chat getChat(){
+    public Chat getChatManager(){
         return chat;
     }
 

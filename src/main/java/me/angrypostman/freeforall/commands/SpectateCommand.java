@@ -19,7 +19,7 @@ import org.bukkit.inventory.PlayerInventory;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class SpectateCommand implements CommandExecutor{
 
@@ -54,10 +54,12 @@ public class SpectateCommand implements CommandExecutor{
 
             if (args.length > 0){
                 Player target=Bukkit.getPlayer(args[0]);
-                if(target!=null&&target.isOnline()
-                        &&target!=player &&!UserCache.isSpectating(target)){
-                    player.teleport(target);
+                if (target == null || !target.isOnline()){
+                    Message.get("player-not-found-message")
+                            .replace("%player%", args[0])
+                            .send(player);
                 }
+                player.teleport(target);
                 return true;
             }
 
@@ -73,8 +75,7 @@ public class SpectateCommand implements CommandExecutor{
             if(locations == null || locations.size() == 0){
                 location=player.getWorld().getSpawnLocation();
             }else {
-                Random random=new Random();
-                location=locations.get(random.nextInt(locations.size()));
+                location=locations.get(ThreadLocalRandom.current().nextInt(locations.size()));
             }
 
             player.teleport(location);
@@ -119,15 +120,16 @@ public class SpectateCommand implements CommandExecutor{
 
             if (args.length > 0){
                 Player target=Bukkit.getPlayer(args[0]);
-                if(target!=null&&target.isOnline()
-                        &&target!=player &&!UserCache.isSpectating(target)){
-                    player.teleport(target);
+                if (target == null || !target.isOnline()){
+                    Message.get("player-not-found-message")
+                            .replace("%player%", args[0])
+                            .send(player);
                 }
+                player.teleport(target);
             }
 
             UserCache.setSpectating(user, true);
             Message.get("spectator-enabled-message").send(player);
-
 
         }
 

@@ -11,6 +11,7 @@ public class UserData{
     private StatValue killStreak;
     private StatValue deaths;
     private StatValue points;
+
     UserData(User user, int kills, int deaths, int points){
         this.kills=new StatValue(user, Statistic.getStatistic("kills"), kills);
         this.deaths=new StatValue(user, Statistic.getStatistic("deaths"), deaths);
@@ -23,7 +24,7 @@ public class UserData{
     }
 
     public StatValue getKills(){
-        return kills;
+        return kills.clone();
     }
 
     public void addKill(){
@@ -32,7 +33,7 @@ public class UserData{
     }
 
     public StatValue getDeaths(){
-        return deaths;
+        return deaths.clone();
     }
 
     public void addDeath(){
@@ -40,7 +41,7 @@ public class UserData{
     }
 
     public double getKillDeathRatio(){
-        if(getDeaths().getValue() <= 1){
+        if(getDeaths().getValue() <= 1){ //avoid divide by 0 errors and no point in dividing by 1
             return getKills().getValue();
         }
         return Double.parseDouble(String.format("%.2f", ((double) getKills().getValue() / getDeaths().getValue())));
@@ -59,7 +60,7 @@ public class UserData{
     }
 
     public StatValue getPoints(){
-        return points;
+        return points.clone();
     }
 
     public void addPoints(int add){
@@ -74,17 +75,15 @@ public class UserData{
     }
 
 
-    public int getRating(){
-        return 0;
+    public StatValue getRank(){
+        return new StatValue(null, null);
     }
 
     public void resetStats(){
-        
         kills.setValue(0);
         deaths.setValue(0);
         killStreak.setValue(0);
         points.setValue(0);
-        
     }
 
 }

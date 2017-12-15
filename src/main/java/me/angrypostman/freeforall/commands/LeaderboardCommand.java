@@ -41,7 +41,7 @@ public class LeaderboardCommand implements CommandExecutor{
         Player player=(Player) commandSender;
 
         if(plugin.getDataStorage() instanceof YamlStorage){
-            player.sendMessage(ChatColor.RED+"The leaderboard command is currently only supported while using MySQL or SQLite.");
+            player.sendMessage(ChatColor.RED+"The leaderboard command is currently only supported while using MySQL or SQLite :/.");
             return true;
         }
 
@@ -60,6 +60,7 @@ public class LeaderboardCommand implements CommandExecutor{
         int finalPage=page;
 
         doAsync(() -> { //Have to go out of the main thread as getLeaderboardTop can call MySQL
+
             List<User> leaderboard=dataStorage.getLeaderboardTop(finalPage);
             doSync(() -> { //No point in running back to the main thread for each result, we already have the data
 
@@ -77,6 +78,7 @@ public class LeaderboardCommand implements CommandExecutor{
                         });
 
             });
+
         });
 
         return true;

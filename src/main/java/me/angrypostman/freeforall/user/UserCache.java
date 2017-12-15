@@ -77,7 +77,7 @@ public class UserCache{
 
     public static void setSpectating(User user, boolean spectating){
         if(spectating){
-            if(!isSpectating(user)){
+            if(!isSpectating(user)){ //No duplicate entries in spectator list
                 spectators.add(user);
             }
         }else if(isSpectating(user)){
@@ -99,7 +99,8 @@ public class UserCache{
 
     public static void expireUser(User user){
         Preconditions.checkNotNull(user, "user cannot be null");
-        users.remove(user);
+        UserCache.users.remove(user);
+        UserCache.spectators.remove(user);
     }
 
 }

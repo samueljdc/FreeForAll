@@ -41,6 +41,8 @@ public class PlayerJoinListener implements Listener{
         Optional<User> optional=UserCache.getUserIfPresent(player);
 
         if(!optional.isPresent()){
+            plugin.getLogger().info("Failed to load user data for '"+player.getName()+"("+player.getUniqueId()+") " +
+                    "during login validation.");
             player.kickPlayer(ChatColor.RED + "Failed to load your player data, please relog.");
             return;
         }
