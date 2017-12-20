@@ -1,5 +1,8 @@
 package me.angrypostman.freeforall.listeners;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.kit.FFAKit;
@@ -14,61 +17,55 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-
 import static me.angrypostman.freeforall.FreeForAll.doSyncLater;
 
 public class PlayerRespawnListener implements Listener{
 
     //Can't really think of anything else to do here tbh...
 
-    private FreeForAll plugin;
-    private DataStorage dataStorage;
-
-    public PlayerRespawnListener(FreeForAll plugin){
+    public PlayerRespawnListener(final FreeForAll plugin){
         this.plugin=plugin;
         this.dataStorage=plugin.getDataStorage();
     }
 
     @EventHandler(priority=EventPriority.HIGHEST)
-    public void onPlayerRespawn(PlayerRespawnEvent event){
+    public void onPlayerRespawn(final PlayerRespawnEvent event){
 
-        Player player=event.getPlayer();
-        Optional<User> optional=UserCache.getUserIfPresent(player);
+        final Player player=event.getPlayer();
+        final Optional<User> optional=UserCache.getUserIfPresent(player);
 
         if(!optional.isPresent()){
-            player.kickPlayer(ChatColor.RED + "Failed to load player data, please relog.");
+            player.kickPlayer(ChatColor.RED+"Failed to load player data, please relog.");
             return;
         }
 
-        User user=optional.get();
+        final User user=optional.get();
 
-        List<Location> locations=dataStorage.getLocations();
-        if(locations == null || locations.size() == 0) return;
+        final List<Location> locations=this.dataStorage.getLocations();
+        if(locations==null||locations.size()==0){ return; }
 
-        Random random=new Random();
-        int rand=random.nextInt(locations.size());
+        final Random random=new Random();
+        final int rand=random.nextInt(locations.size());
 
-        Location location=locations.get(rand);
+        final Location location=locations.get(rand);
 
         event.setRespawnLocation(location);
 
-        doSyncLater(() -> {
+        doSyncLater(()->{
 
             Optional<FFAKit> kitOptional=KitManager.getKitOf(player);
             if(!kitOptional.isPresent()){
                 kitOptional=KitManager.getDefaultKit();
-                if(!kitOptional.isPresent()) return;
+                if(!kitOptional.isPresent()){ return; }
             }
 
-            FFAKit ffaKit=kitOptional.get();
+            final FFAKit ffaKit=kitOptional.get();
             KitManager.giveItems(user, ffaKit);
 
             //A second later should be fine for this.
         }, 20L);
-
     }
 
+    private final FreeForAll plugin;
+    private final DataStorage dataStorage;
 }

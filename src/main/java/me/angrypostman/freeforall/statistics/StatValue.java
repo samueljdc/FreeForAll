@@ -5,45 +5,48 @@ import me.angrypostman.freeforall.user.User;
 
 public class StatValue implements Cloneable{
 
-    private User user;
-    private Statistic parent;
+    private final User user;
+    private final Statistic parent;
 
-    private int value;
-
-    public StatValue(User user, Statistic parent){
-        this(user, parent, parent == null ? 0 : parent.getDefaultValue());
+    public StatValue(final User user,
+                     final Statistic parent){
+        this(user, parent, parent==null ? 0 : parent.getDefaultValue());
     }
 
-    public StatValue(User user, Statistic parent, int value){
+    public StatValue(final User user,
+                     final Statistic parent,
+                     final int value){
         this.user=user;
         this.parent=parent;
         this.value=value;
     }
 
     public User getUser(){
-        return user;
+        return this.user;
     }
 
     public Statistic getParent(){
-        return parent;
+        return this.parent;
     }
 
     public int getValue(){
-        return value;
+        return this.value;
     }
 
-    public void setValue(int value){
-        Preconditions.checkArgument(value >= 0, "value cannot be less than 0");
+    public void setValue(final int value){
+        Preconditions.checkArgument(value>=0, "value cannot be less than 0");
         this.value=value;
     }
 
     @Override
     public StatValue clone(){
         try{
-            return (StatValue)super.clone();
-        } catch(CloneNotSupportedException e){
+            return (StatValue) super.clone();
+        }catch(final CloneNotSupportedException e){
             e.printStackTrace();
         }
         return null;
     }
+
+    private int value;
 }

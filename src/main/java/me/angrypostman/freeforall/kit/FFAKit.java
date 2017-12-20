@@ -1,120 +1,117 @@
 package me.angrypostman.freeforall.kit;
 
+import java.util.List;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 
-import java.util.List;
-
 public class FFAKit{
 
-    private String name=null;
-    private String permission=null;
-
-    private ItemStack helmet=null;
-    private ItemStack chestplate=null;
-    private ItemStack leggings=null;
-    private ItemStack boots=null;
-
-    private boolean isDefault=false;
-
-    private List<ItemStack> inventoryItems=null;
-    private List<PotionEffect> potionEffects=null;
-
-    public FFAKit(String name){
+    public FFAKit(final String name){
         this(name, null);
     }
 
-    public FFAKit(String name, String permission){
+    public FFAKit(final String name,
+                  final String permission){
         this.name=name;
         this.permission=permission;
     }
 
     public String getName(){
-        return name;
+        return this.name;
     }
 
     public boolean hasPermission(){
-        return getPermission() != null && !getPermission().isEmpty();
+        return getPermission()!=null&&!getPermission().isEmpty();
     }
 
     public String getPermission(){
-        return permission;
+        return this.permission;
     }
 
-    public void setPermission(String permission){
+    public void setPermission(final String permission){
         this.permission=permission;
     }
 
     public ItemStack getHelmet(){
-        return helmet;
+        return this.helmet;
     }
 
-    public void setHelmet(ItemStack helmet){
+    public void setHelmet(final ItemStack helmet){
         this.helmet=helmet;
     }
 
-    public void setHelmet(Material helmet){
+    public void setHelmet(final Material helmet){
         this.helmet=new ItemStack(helmet);
     }
 
     public ItemStack getChestplate(){
-        return chestplate;
+        return this.chestplate;
     }
 
-    public void setChestplate(ItemStack chestplate){
+    public void setChestplate(final ItemStack chestplate){
         this.chestplate=chestplate;
     }
 
-    public void setChestplate(Material chestplate){
+    public void setChestplate(final Material chestplate){
         this.chestplate=new ItemStack(chestplate);
     }
 
     public ItemStack getLeggings(){
-        return leggings;
+        return this.leggings;
     }
 
-    public void setLeggings(ItemStack leggings){
+    public void setLeggings(final ItemStack leggings){
         this.leggings=leggings;
     }
 
-    public void setLeggings(Material leggings){
+    public void setLeggings(final Material leggings){
         this.leggings=new ItemStack(leggings);
     }
 
     public ItemStack getBoots(){
-        return boots;
+        return this.boots;
     }
 
-    public void setBoots(ItemStack boots){
+    public void setBoots(final ItemStack boots){
         this.boots=boots;
     }
 
-    public void setBoots(Material boots){
+    public void setBoots(final Material boots){
         this.boots=new ItemStack(boots);
     }
 
     public List<ItemStack> getInventoryItems(){
-        return inventoryItems;
+        return this.inventoryItems;
     }
 
-    public void setInventoryItems(List<ItemStack> inventoryItems){
+    public void setInventoryItems(final List<ItemStack> inventoryItems){
         this.inventoryItems=inventoryItems;
     }
 
     public List<PotionEffect> getPotionEffects(){
-        return potionEffects;
+        return this.potionEffects;
     }
 
-    public void setPotionEffects(List<PotionEffect> potionEffects){
+    public void setPotionEffects(final List<PotionEffect> potionEffects){
         this.potionEffects=potionEffects;
     }
 
     public boolean isDefault(){
-        return isDefault;
+        return this.isDefault;
     }
 
-    public void setDefault(boolean isDefault){
+    public void setDefault(final boolean isDefault){
         this.isDefault=isDefault;
     }
+
+    private String name=null;
+    private String permission=null;
+    private ItemStack helmet=null;
+    private ItemStack chestplate=null;
+    private ItemStack leggings=null;
+    private ItemStack boots=null;
+    private boolean isDefault=false;
+    private List<ItemStack> inventoryItems=null;
+    private List<PotionEffect> potionEffects=null;
 }

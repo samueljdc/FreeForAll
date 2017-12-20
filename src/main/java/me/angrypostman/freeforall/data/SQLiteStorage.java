@@ -1,6 +1,14 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.logging.Level;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
@@ -8,21 +16,12 @@ import me.angrypostman.freeforall.user.UserData;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.io.File;
-import java.io.IOException;
-import java.sql.*;
-import java.util.*;
-import java.util.logging.Level;
-
 public class SQLiteStorage extends DataStorage{
 
     private static final int PAGE_ROWS=10;
-    private FreeForAll plugin=null;
-    private File dataFile;
-    private Connection connection;
-    private List<Location> locations;
 
-    public SQLiteStorage(FreeForAll plugin, File dataFile){
+    public SQLiteStorage(final FreeForAll plugin,
+                         final File dataFile){
         this.dataFile=dataFile;
         this.locations=new ArrayList<>();
         this.plugin=plugin;
@@ -31,117 +30,131 @@ public class SQLiteStorage extends DataStorage{
     @Override
     public boolean initialize(){
 
-        Preconditions.checkArgument(!isLoaded(), "cannot initialize data storage as data storage is already initialized");
+        Preconditions.checkArgument(!isLoaded(),
+                                    "cannot initialize data storage as data storage is already initialized");
 
-        if (!dataFile.exists()){
-            File parent=dataFile.getParentFile();
-            if (parent!=null)parent.mkdirs();
+        if(!this.dataFile.exists()){
+            final File parent=this.dataFile.getParentFile();
+            if(parent!=null){ parent.mkdirs(); }
             try{
-                dataFile.createNewFile();
-            } catch(IOException e){
-                plugin.getLogger().log(Level.INFO, "Failed to create data file", e);
+                this.dataFile.createNewFile();
+            }catch(final IOException e){
+                this.plugin.getLogger()
+                           .log(Level.INFO, "Failed to create data file", e);
                 return false;
             }
         }
 
-        plugin.getLogger().info("Initializing database connection pool...");
+        this.plugin.getLogger()
+                   .info("Initializing database connection pool...");
 
-        try {
+        try{
             Class.forName("org.sqlite.JDBC");
-        } catch(ClassNotFoundException ex){
-            plugin.getLogger().info("Failed to resolve SQLite class name");
+        }catch(final ClassNotFoundException ex){
+            this.plugin.getLogger()
+                       .info("Failed to resolve SQLite class name");
             return false;
         }
 
-        String jdbcUrl="jdbc:sqlite:" + dataFile.getPath();
-        plugin.getLogger().info("Attempting to connect to " + jdbcUrl + "...");
+        final String jdbcUrl="jdbc:sqlite:"+this.dataFile.getPath();
+        this.plugin.getLogger()
+                   .info("Attempting to connect to "+jdbcUrl+"...");
 
         PreparedStatement statement=null;
         ResultSet set=null;
         try{
-            connection=DriverManager.getConnection(jdbcUrl);
-            DatabaseMetaData databaseMeta=connection.getMetaData();
+            this.connection=DriverManager.getConnection(jdbcUrl);
+            final DatabaseMetaData databaseMeta=this.connection.getMetaData();
 
-            plugin.getLogger().info("A connection was successfully established to SQLite, validating tables...");
+            this.plugin.getLogger()
+                       .info("A connection was successfully established to SQLite, validating tables...");
 
             String table="ffa_player_data";
-            if(!databaseMeta.getTables(null, null, table, null).next()){
+            if(!databaseMeta.getTables(null, null, table, null)
+                            .next()){
 
-                plugin.getLogger().info("Table `" + table + "` not found, creating it...");
-                String values="`playerId` INT(11) PRIMARY KEY," + "`playerUUID` VARCHAR(36) NOT NULL UNIQUE," +
-                        //cannot enforce uniqueness on playerName and lookupName
-                        "`playerName` VARCHAR(16) NOT NULL," + "`lookupName` VARCHAR(16) NOT NULL, " + "`points` INT(11) NOT NULL DEFAULT '0'," + "`kills` INT(11) NOT NULL DEFAULT '0'," + "`deaths` INT(11) NOT NULL DEFAULT '0'";
-                String query="CREATE TABLE `" + table + "`(" + values + ");" + "CREATE INDEX uniqueIdIndex ON `" + table + "` (playerUUID);" + "CREATE INDEX playerIndex ON `" + table + "` (playerName);" + "CREATE INDEX lookupIndex ON `" + table + "` (lookupName);";
-                statement=connection.prepareStatement(query);
+                this.plugin.getLogger()
+                           .info("Table `"+table+"` not found, creating it...");
+                final String values="`playerId` INT(11) PRIMARY KEY,"+"`playerUUID` VARCHAR(36) NOT NULL UNIQUE,"+
+                                    //cannot enforce uniqueness on playerName and lookupName
+                                    "`playerName` VARCHAR(16) NOT NULL,"+"`lookupName` VARCHAR(16) NOT NULL, "+"`points` INT(11) NOT NULL DEFAULT '0',"+"`kills` INT(11) NOT NULL DEFAULT '0',"+"`deaths` INT(11) NOT NULL DEFAULT '0'";
+                final String query="CREATE TABLE `"+table+"`("+values+");"+"CREATE INDEX uniqueIdIndex ON `"+table+"` (playerUUID);"+"CREATE INDEX playerIndex ON `"+table+"` (playerName);"+"CREATE INDEX lookupIndex ON `"+table+"` (lookupName);";
+                statement=this.connection.prepareStatement(query);
                 statement.executeUpdate();
 
-                plugin.getLogger().info("Table `" + table + "` has been created!");
-            } else{
-                plugin.getLogger().info("Found table `" + table + "`!");
+                this.plugin.getLogger()
+                           .info("Table `"+table+"` has been created!");
+            }else{
+                this.plugin.getLogger()
+                           .info("Found table `"+table+"`!");
             }
 
             table="ffa_locations";
-            if(!databaseMeta.getTables(null, null, table, null).next()){
+            if(!databaseMeta.getTables(null, null, table, null)
+                            .next()){
 
-                plugin.getLogger().info("Table `" + table + "` not found, creating it...");
-                String values="`locationId` INT(11) PRIMARY KEY," + "`world` TEXT NOT NULL, " + "`locationX` DOUBLE NOT NULL DEFAULT '0.0'," + "`locationY` DOUBLE NOT NULL DEFAULT '0.0'," + "`locationZ` DOUBLE NOT NULL DEFAULT '0.0'," + "`locationPitch` FLOAT NOT NULL DEFAULT '0'," + "`locationYaw` FLOAT NOT NULL DEFAULT '0'";
-                String query="CREATE TABLE `" + table + "`(" + values + ");";
-                statement=connection.prepareStatement(query);
+                this.plugin.getLogger()
+                           .info("Table `"+table+"` not found, creating it...");
+                final String values="`locationId` INT(11) PRIMARY KEY,"+"`world` TEXT NOT NULL, "+"`locationX` DOUBLE NOT NULL DEFAULT '0.0',"+"`locationY` DOUBLE NOT NULL DEFAULT '0.0',"+"`locationZ` DOUBLE NOT NULL DEFAULT '0.0',"+"`locationPitch` FLOAT NOT NULL DEFAULT '0',"+"`locationYaw` FLOAT NOT NULL DEFAULT '0'";
+                final String query="CREATE TABLE `"+table+"`("+values+");";
+                statement=this.connection.prepareStatement(query);
                 statement.executeUpdate();
 
-                plugin.getLogger().info("Table `" + table + "` has been created!");
-            } else{
-                plugin.getLogger().info("Found table `" + table + "`!");
+                this.plugin.getLogger()
+                           .info("Table `"+table+"` has been created!");
+            }else{
+                this.plugin.getLogger()
+                           .info("Found table `"+table+"`!");
 
                 //Table exists so query the table for existing data
-                List<Location> locations=new ArrayList<>();
+                final List<Location> locations=new ArrayList<>();
 
-                String query="SELECT * FROM `ffa_locations`;";
-                statement=connection.prepareStatement(query);
+                final String query="SELECT * FROM `ffa_locations`;";
+                statement=this.connection.prepareStatement(query);
                 set=statement.executeQuery();
 
                 while(set.next()){
 
-                    String world=set.getString("world");
-                    World bukkitWorld=plugin.getServer().getWorld(world);
+                    final String world=set.getString("world");
+                    final World bukkitWorld=this.plugin.getServer()
+                                                       .getWorld(world);
 
-                    if(bukkitWorld == null) throw new IllegalArgumentException("Unknown world '" + world + "'");
+                    if(bukkitWorld==null){ throw new IllegalArgumentException("Unknown world '"+world+"'"); }
 
-                    double locationX=set.getDouble("locationX");
-                    double locationY=set.getDouble("locationY");
-                    double locationZ=set.getDouble("locationZ");
-                    float locationPitch=set.getFloat("locationPitch");
-                    float locationYaw=set.getFloat("locationYaw");
+                    final double locationX=set.getDouble("locationX");
+                    final double locationY=set.getDouble("locationY");
+                    final double locationZ=set.getDouble("locationZ");
+                    final float locationPitch=set.getFloat("locationPitch");
+                    final float locationYaw=set.getFloat("locationYaw");
 
-                    Location location=new Location(bukkitWorld, locationX, locationY, locationZ, locationPitch, locationYaw);
+                    final Location location=new Location(bukkitWorld, locationX, locationY, locationZ, locationPitch,
+                                                         locationYaw);
                     locations.add(location);
-
                 }
 
                 this.locations.addAll(locations);
-
             }
-
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst validating SQLite tables.");
-            plugin.getLogger().info("Message: " + ex.getMessage());
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst validating SQLite tables.");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
             return false;
-        } finally{
+        }finally{
 
-            if(set != null){
+            if(set!=null){
                 try{
                     set.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
 
         return true;
@@ -152,38 +165,47 @@ public class SQLiteStorage extends DataStorage{
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
 
-        plugin.getLogger().info("Performing DataStorage shutdown...");
+        this.plugin.getLogger()
+                   .info("Performing DataStorage shutdown...");
 
-        plugin.getLogger().info("Saving user data of " + plugin.getServer().getOnlinePlayers().size() + " players...");
-        for(User user : UserCache.getUsers()){
+        this.plugin.getLogger()
+                   .info("Saving user data of "+this.plugin.getServer()
+                                                           .getOnlinePlayers()
+                                                           .size()+" players...");
+        for(final User user : UserCache.getUsers()){
             UserCache.expireUser(user);
             saveUser(user);
         }
 
         this.locations.clear();
 
-        plugin.getLogger().info("Shutting down connections...");
-        if(connection != null){
+        this.plugin.getLogger()
+                   .info("Shutting down connections...");
+        if(this.connection!=null){
             try{
-                if(!connection.isClosed()){
-                    connection.close();
+                if(!this.connection.isClosed()){
+                    this.connection.close();
                 }
-            } catch(SQLException e){
+            }catch(final SQLException e){
                 e.printStackTrace();
             }
         }
 
-        plugin.getLogger().info("DataStorage shutdown complete!");
+        this.plugin.getLogger()
+                   .info("DataStorage shutdown complete!");
     }
 
     @Override
-    public Optional<User> createUser(UUID playerUUID, String playerName){
+    public Optional<User> createUser(final UUID playerUUID,
+                                     final String playerName){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(playerUUID, "uuid cannot be null");
-        Preconditions.checkArgument(playerName != null && !playerName.isEmpty(), "player name cannot be null or effectively null");
+        Preconditions.checkArgument(playerName!=null&&!playerName.isEmpty(),
+                                    "player name cannot be null or effectively null");
 
-        plugin.getLogger().info("Attempting to create a new database entry for "+playerName+"("+playerUUID+")...");
+        this.plugin.getLogger()
+                   .info("Attempting to create a new database entry for "+playerName+"("+playerUUID+")...");
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -192,7 +214,7 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            String query="INSERT INTO `ffa_player_data`(`playerId`, `playerUUID`, `playerName`, `lookupName`) VALUES(NULL, ?, ?, ?);";
+            final String query="INSERT INTO `ffa_player_data`(`playerId`, `playerUUID`, `playerName`, `lookupName`) VALUES(NULL, ?, ?, ?);";
 
             statement=connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
             statement.setString(1, playerUUID.toString());
@@ -203,44 +225,46 @@ public class SQLiteStorage extends DataStorage{
 
             set=statement.getGeneratedKeys();
 
-            if(!set.next()) throw new SQLException("failed to retrieve generated keys from result set");
+            if(!set.next()){ throw new SQLException("failed to retrieve generated keys from result set"); }
 
             return Optional.of(new User(set.getInt(1), playerUUID, playerName)); //defaults for everything else
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst attempting to create database record for '" + playerName + "'");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst attempting to create database record for '"+playerName+"'");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-            if(set != null){
+            if(set!=null){
                 try{
                     set.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
 
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(UUID uuid){
+    public Optional<User> loadUser(final UUID uuid){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(uuid, "uuid cannot be null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
-        Optional<User> tempUser=UserCache.getUserIfPresent(uuid);
-        if(tempUser.isPresent()) return tempUser;
+        final Optional<User> tempUser=UserCache.getUserIfPresent(uuid);
+        if(tempUser.isPresent()){ return tempUser; }
 
-        plugin.getLogger().info("Loading user data for user "+uuid+"...");
+        this.plugin.getLogger()
+                   .info("Loading user data for user "+uuid+"...");
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -249,7 +273,7 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            String query="SELECT * FROM `ffa_player_data` WHERE `playerUUID`=? LIMIT 1;";
+            final String query="SELECT * FROM `ffa_player_data` WHERE `playerUUID`=? LIMIT 1;";
 
             statement=connection.prepareStatement(query);
             statement.setString(1, uuid.toString());
@@ -257,50 +281,52 @@ public class SQLiteStorage extends DataStorage{
             set=statement.executeQuery();
             if(set.next()){
 
-                int playerId=set.getInt("playerId");
-                String playerName=set.getString("playerName");
-                int points=set.getInt("points");
-                int kills=set.getInt("kills");
-                int deaths=set.getInt("deaths");
+                final int playerId=set.getInt("playerId");
+                final String playerName=set.getString("playerName");
+                final int points=set.getInt("points");
+                final int kills=set.getInt("kills");
+                final int deaths=set.getInt("deaths");
 
                 return Optional.of(new User(playerId, uuid, playerName, points, kills, deaths));
             }
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst loading user data for '"+uuid+"'");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst loading user data for '" + uuid + "'");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
-
-            if(set != null){
+            if(set!=null){
                 try{
                     set.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
 
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(String lookupName){
+    public Optional<User> loadUser(final String lookupName){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
-        Preconditions.checkArgument(lookupName != null && !lookupName.isEmpty(), "lookupName cannot be null or effectively null");
+        Preconditions.checkArgument(lookupName!=null&&!lookupName.isEmpty(),
+                                    "lookupName cannot be null or effectively null");
 
         //If user is in cache, refer to the cache for the data instead as the data should never be different
-        Optional<User> tempUser=UserCache.getUserIfPresent(lookupName);
-        if(tempUser.isPresent()) return tempUser;
+        final Optional<User> tempUser=UserCache.getUserIfPresent(lookupName);
+        if(tempUser.isPresent()){ return tempUser; }
 
-        plugin.getLogger().info("Loading user data for "+lookupName+"...");
+        this.plugin.getLogger()
+                   .info("Loading user data for "+lookupName+"...");
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -309,54 +335,55 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            String query="SELECT * FROM `ffa_player_data` WHERE `lookupName`=? LIMIT 1;";
+            final String query="SELECT * FROM `ffa_player_data` WHERE `lookupName`=? LIMIT 1;";
 
             statement=connection.prepareStatement(query);
             statement.setString(1, lookupName.toLowerCase());
 
             set=statement.executeQuery();
             if(set.next()){
-                int playerId=set.getInt("playerId");
-                UUID playerUUID=UUID.fromString(set.getString("playerUUID"));
-                String playerName=set.getString("playerName");
-                int points=set.getInt("points");
-                int kills=set.getInt("kills");
-                int deaths=set.getInt("deaths");
+                final int playerId=set.getInt("playerId");
+                final UUID playerUUID=UUID.fromString(set.getString("playerUUID"));
+                final String playerName=set.getString("playerName");
+                final int points=set.getInt("points");
+                final int kills=set.getInt("kills");
+                final int deaths=set.getInt("deaths");
 
                 return Optional.of(new User(playerId, playerUUID, playerName, points, kills, deaths));
             }
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst loading user data for '"+lookupName+"'");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst loading user data for '" + lookupName + "'");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
-
-            if(set != null){
+            if(set!=null){
                 try{
                     set.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
 
         return Optional.empty();
     }
 
     @Override
-    public void saveUser(User user){
+    public void saveUser(final User user){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(user, "user cannot be null");
 
-        plugin.getLogger().info("Saving user data for "+user.getName()+"("+user.getUniqueId()+")...");
+        this.plugin.getLogger()
+                   .info("Saving user data for "+user.getName()+"("+user.getUniqueId()+")...");
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -364,42 +391,46 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            String query="UPDATE `ffa_player_data` SET `playerName`=?, `lookupName`=?, " + "`points`=?, `kills`=?," + "`deaths`=? WHERE `playerUUID`=?;";
+            final String query="UPDATE `ffa_player_data` SET `playerName`=?, `lookupName`=?, "+"`points`=?, `kills`=?,"+"`deaths`=? WHERE `playerUUID`=?;";
 
-            UserData data=user.getUserData();
+            final UserData data=user.getUserData();
 
             statement=connection.prepareStatement(query);
             statement.setString(1, user.getName());
             statement.setString(2, user.getLookupName());
-            statement.setInt(3, data.getPoints().getValue());
-            statement.setInt(4, data.getKills().getValue());
-            statement.setInt(5, data.getDeaths().getValue());
-            statement.setString(6, user.getUniqueId().toString());
+            statement.setInt(3, data.getPoints()
+                                    .getValue());
+            statement.setInt(4, data.getKills()
+                                    .getValue());
+            statement.setInt(5, data.getDeaths()
+                                    .getValue());
+            statement.setString(6, user.getUniqueId()
+                                       .toString());
 
             statement.executeUpdate();
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst saving user data for '" + user.getName() + "'");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst saving user data for '"+user.getName()+"'");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
-
     }
 
     @Override
-    public List<User> getLeaderboardTop(int page){
+    public List<User> getLeaderboardTop(final int page){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
-        Preconditions.checkArgument(page >= 0, "page cannot be negative");
+        Preconditions.checkArgument(page>=0, "page cannot be negative");
 
-        List<User> leaderboard=new ArrayList<>();
+        final List<User> leaderboard=new ArrayList<>();
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -408,44 +439,43 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            String query="SELECT `playerUUID` FROM `ffa_player_data` ORDER BY `points` DESC LIMIT " + ((page - 1) * PAGE_ROWS) + ", " + PAGE_ROWS;
+            final String query="SELECT `playerUUID` FROM `ffa_player_data` ORDER BY `points` DESC LIMIT "+((page-1)*PAGE_ROWS)+", "+PAGE_ROWS;
             statement=connection.prepareStatement(query);
             set=statement.executeQuery();
 
             while(set.next()){
 
-                UUID playerUUID=UUID.fromString(set.getString("playerUUID"));
-                User user=loadUser(playerUUID).get(); //Never going to be not present
+                final UUID playerUUID=UUID.fromString(set.getString("playerUUID"));
+                final User user=loadUser(playerUUID).get(); //Never going to be not present
                 leaderboard.add(user);
-
             }
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst retrieving leaderboard information");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst retrieving leaderboard information");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
-
-            if(set != null){
+            if(set!=null){
                 try{
                     set.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
 
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
 
         return leaderboard;
     }
 
     @Override
-    public void saveLocation(Location location){
+    public void saveLocation(final Location location){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
         Preconditions.checkNotNull(location, "location cannot be null");
@@ -456,11 +486,12 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            Location clone=location.clone();
+            final Location clone=location.clone();
 
-            String query="INSERT INTO `ffa_locations`(world, locationX, locationY, locationZ, locationPitch, locationYaw) VALUES(?, ?, ?, ?, ?, ?);";
+            final String query="INSERT INTO `ffa_locations`(world, locationX, locationY, locationZ, locationPitch, locationYaw) VALUES(?, ?, ?, ?, ?, ?);";
             statement=connection.prepareStatement(query);
-            statement.setString(1, clone.getWorld().getName());
+            statement.setString(1, clone.getWorld()
+                                        .getName());
             statement.setDouble(2, clone.getX());
             statement.setDouble(3, clone.getY());
             statement.setDouble(4, clone.getZ());
@@ -470,28 +501,27 @@ public class SQLiteStorage extends DataStorage{
             statement.executeUpdate();
 
             this.locations.add(clone);
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst saving location data");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst saving location data");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
-
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
-
     }
 
     @Override
-    public void deleteLocation(int spawnId){
+    public void deleteLocation(final int spawnId){
 
         Preconditions.checkArgument(isLoaded(), "data storage not initialized");
-        Preconditions.checkArgument(spawnId >= 0 && spawnId <= locations.size(), "invalid spawnId");
+        Preconditions.checkArgument(spawnId>=0&&spawnId<=this.locations.size(), "invalid spawnId");
 
         Connection connection=null;
         PreparedStatement statement=null;
@@ -499,13 +529,14 @@ public class SQLiteStorage extends DataStorage{
 
             connection=getConnection();
 
-            Location location=locations.get(spawnId);
+            final Location location=this.locations.get(spawnId);
 
             //Probably a better way to do this, but if you're setting spawn locations
             //in the same place, then expect things to break, you're just asking for it
-            String query="DELETE FROM `ffa_locations` WHERE `world`=? AND `locationX`=? AND `locationY`=? AND `locationZ`=?";
+            final String query="DELETE FROM `ffa_locations` WHERE `world`=? AND `locationX`=? AND `locationY`=? AND `locationZ`=?";
             statement=connection.prepareStatement(query);
-            statement.setString(1, location.getWorld().getName());
+            statement.setString(1, location.getWorld()
+                                           .getName());
             statement.setDouble(2, location.getX());
             statement.setDouble(3, location.getY());
             statement.setDouble(4, location.getZ());
@@ -513,41 +544,45 @@ public class SQLiteStorage extends DataStorage{
             statement.executeUpdate();
 
             this.locations.remove(location);
+        }catch(final SQLException ex){
+            this.plugin.getLogger()
+                       .info("An error occurred whilst deleting location data");
+            this.plugin.getLogger()
+                       .info("Message: "+ex.getMessage());
+        }finally{
 
-        } catch(SQLException ex){
-            plugin.getLogger().info("An error occurred whilst deleting location data");
-            plugin.getLogger().info("Message: " + ex.getMessage());
-        } finally{
-
-            if(statement != null){
+            if(statement!=null){
                 try{
                     statement.close();
-                } catch(SQLException ignored){
+                }catch(final SQLException ignored){
                 }
             }
-
         }
-
     }
 
     @Override
     public List<Location> getLocations(){
-        return locations;
+        return this.locations;
     }
 
     @Override
     public boolean isLoaded(){
         try{
-            return connection != null && !connection.isClosed();
-        } catch (SQLException ex){
+            return this.connection!=null&&!this.connection.isClosed();
+        }catch(final SQLException ex){
             ex.printStackTrace();
             return false;
         }
     }
 
-    private Connection getConnection() throws SQLException{
+    private Connection getConnection() throws
+                                       SQLException{
         Preconditions.checkArgument(isLoaded(), "data source must be initialized first");
-        return connection;
+        return this.connection;
     }
 
+    private FreeForAll plugin=null;
+    private final File dataFile;
+    private Connection connection;
+    private final List<Location> locations;
 }

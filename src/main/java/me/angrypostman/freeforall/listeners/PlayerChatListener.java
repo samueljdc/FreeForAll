@@ -1,5 +1,6 @@
 package me.angrypostman.freeforall.listeners;
 
+import java.util.Optional;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.user.UserCache;
@@ -12,51 +13,46 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 
-import java.util.Optional;
-
 public class PlayerChatListener implements Listener{
 
-    private FreeForAll plugin=null;
-    private Configuration config=null;
-    private Chat chat=null;
-
-    public PlayerChatListener(FreeForAll plugin){
+    public PlayerChatListener(final FreeForAll plugin){
         this.plugin=plugin;
         this.config=plugin.getConfiguration();
         this.chat=plugin.getChatManager();
     }
 
-
     @EventHandler
-    public void onPlayerChat(AsyncPlayerChatEvent event){
+    public void onPlayerChat(final AsyncPlayerChatEvent event){
 
         //If vault was not detected on server startup, or chat support is disabled
         //then ignore the chat event
-        if(config.isChatFormatting() || !plugin.hasVault()) return;
+        if(this.config.isChatFormatting()||!this.plugin.hasVault()){ return; }
 
-        Player player=event.getPlayer();
-        Optional<User> optional=UserCache.getUserIfPresent(player);
+        final Player player=event.getPlayer();
+        final Optional<User> optional=UserCache.getUserIfPresent(player);
         if(!optional.isPresent()){
             player.sendMessage(ChatColor.RED+"Failed to load your player data, please relog.");
             event.setCancelled(true);
             return;
         }
 
-        String content=event.getMessage();
+        final String content=event.getMessage();
 
-        String group=chat.getPrimaryGroup(player);
+        final String group=this.chat.getPrimaryGroup(player);
         String groupPrefix=null;
-        if (group!=null){
-            groupPrefix=chat.getGroupPrefix(player.getWorld(), group);
+        if(group!=null){
+            groupPrefix=this.chat.getGroupPrefix(player.getWorld(), group);
         }
 
         Message message=Message.get("chat-format");
-        message=message.replace("%group%", groupPrefix==null?(group == null?"":group):groupPrefix);
+        message=message.replace("%group%", groupPrefix==null ? (group==null ? "" : group) : groupPrefix);
         message=message.replace("%player%", player.getName());
         message=message.replace("%content%", content);
-        
-        event.setMessage(message.getContent());
 
+        event.setMessage(message.getContent());
     }
 
+    private FreeForAll plugin=null;
+    private Configuration config=null;
+    private Chat chat=null;
 }

@@ -2,12 +2,14 @@ package me.angrypostman.freeforall.user;
 
 public class Damage{
 
-    private User damagee=null;
-    private User damager=null;
-    private double damage=0.0D;
-    private long timestamp=0L;
+    private final User damagee;
+    private final User damager;
+    private final double damage;
+    private final long timestamp;
 
-    public Damage(User damagee, User damager, double damage){
+    public Damage(final User damagee,
+                  final User damager,
+                  final double damage){
         this.damagee=damagee;
         this.damager=damager;
         this.damage=damage;
@@ -15,19 +17,18 @@ public class Damage{
     }
 
     public User getDamagee(){
-        return damagee;
+        return this.damagee;
     }
 
     public User getDamager(){
-        return damager;
+        return this.damager;
     }
 
     public double getDamage(){
-        return damage;
+        return this.damage;
     }
 
     public long getTimestamp(){
-        return timestamp;
+        return this.timestamp;
     }
-
 }

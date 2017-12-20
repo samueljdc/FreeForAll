@@ -1,5 +1,7 @@
 package me.angrypostman.freeforall.listeners;
 
+import java.util.Optional;
+import java.util.UUID;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.user.User;
@@ -8,49 +10,47 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 
-import java.util.Optional;
-import java.util.UUID;
-
 public class PlayerLoginListener implements Listener{
 
-    private FreeForAll plugin=null;
-    private DataStorage storage=null;
-
-    public PlayerLoginListener(FreeForAll plugin){
+    public PlayerLoginListener(final FreeForAll plugin){
         this.plugin=plugin;
         this.storage=plugin.getDataStorage();
     }
 
     @EventHandler
-    public void onAsyncPreLogin(AsyncPlayerPreLoginEvent event){
+    public void onAsyncPreLogin(final AsyncPlayerPreLoginEvent event){
 
-        if(event.getLoginResult() != AsyncPlayerPreLoginEvent.Result.ALLOWED) {
-            plugin.getLogger().info("Player "+event.getName()+"("+event.getUniqueId()+") was denied access during login, " +
-                    "ignoring this player.");
+        if(event.getLoginResult()!=AsyncPlayerPreLoginEvent.Result.ALLOWED){
+            this.plugin.getLogger()
+                       .info("Player "+event.getName()+"("+event.getUniqueId()+") was denied access during login, "+"ignoring this player.");
             return;
         }
 
-        String playerName=event.getName();
-        UUID playerUUID=event.getUniqueId();
+        final String playerName=event.getName();
+        final UUID playerUUID=event.getUniqueId();
 
-        Optional<User> optional=storage.loadUser(playerUUID);
+        Optional<User> optional=this.storage.loadUser(playerUUID);
         if(!optional.isPresent()){
-            optional=storage.createUser(playerUUID, playerName);
+            optional=this.storage.createUser(playerUUID, playerName);
             if(!optional.isPresent()){
-                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER, "Failed to generate player data, please relog");
-                plugin.getLogger().info("An error occurred whilst generating player data for '" + playerName + "'");
+                event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,
+                               "Failed to generate player data, please relog");
+                this.plugin.getLogger()
+                           .info("An error occurred whilst generating player data for '"+playerName+"'");
                 return;
             }
         }
 
-        User user=optional.get();
-        if(!user.getName().equals(playerName)){
+        final User user=optional.get();
+        if(!user.getName()
+                .equals(playerName)){
             user.setName(playerName);
-            storage.saveUser(user);
+            this.storage.saveUser(user);
         }
 
         UserCache.cacheUser(user);
-
     }
 
+    private FreeForAll plugin=null;
+    private DataStorage storage=null;
 }

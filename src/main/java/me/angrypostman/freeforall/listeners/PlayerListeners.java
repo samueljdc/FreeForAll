@@ -1,5 +1,6 @@
 package me.angrypostman.freeforall.listeners;
 
+import java.util.List;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.Combat;
 import me.angrypostman.freeforall.util.Configuration;
@@ -11,31 +12,26 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.*;
 
-import java.util.List;
-
 public class PlayerListeners implements Listener{
 
-    private FreeForAll plugin=null;
-    private Configuration config=null;
-
-    public PlayerListeners(FreeForAll plugin){
+    public PlayerListeners(final FreeForAll plugin){
         this.plugin=plugin;
         this.config=plugin.getConfiguration();
     }
 
     @EventHandler
-    public void onPlayerChatEvent(AsyncPlayerChatEvent event){
+    public void onPlayerChatEvent(final AsyncPlayerChatEvent event){
 
     }
 
     @EventHandler
-    public void onPlayerFoodLevelChange(FoodLevelChangeEvent event){
+    public void onPlayerFoodLevelChange(final FoodLevelChangeEvent event){
         event.setCancelled(true);
     }
 
     @EventHandler
-    public void onPlayerExpChangeEvent(PlayerExpChangeEvent event){
-        Player player=event.getPlayer();
+    public void onPlayerExpChangeEvent(final PlayerExpChangeEvent event){
+        final Player player=event.getPlayer();
         player.setExp(0);
         player.setTotalExperience(0);
         player.setLevel(0);
@@ -43,54 +39,57 @@ public class PlayerListeners implements Listener{
     }
 
     @EventHandler
-    public void onPlayerPickupItemEvent(PlayerPickupItemEvent event){
+    public void onPlayerPickupItemEvent(final PlayerPickupItemEvent event){
         event.setCancelled(true);
     }
 
     @EventHandler
-    public void onPlayerDropItemEvent(PlayerDropItemEvent event){
+    public void onPlayerDropItemEvent(final PlayerDropItemEvent event){
         event.setCancelled(true);
     }
 
     @EventHandler
-    public void onPlayerCommandPreProcess(PlayerCommandPreprocessEvent event){
+    public void onPlayerCommandPreProcess(final PlayerCommandPreprocessEvent event){
 
-        Player player=event.getPlayer();
+        final Player player=event.getPlayer();
         String message=event.getMessage();
-        String[] split=message.split(" ");
-        if(split.length > 0) message=split[0];
-        if(message.startsWith("/")) message=message.substring(1);
+        final String[] split=message.split(" ");
+        if(split.length>0){ message=split[0]; }
+        if(message.startsWith("/")){ message=message.substring(1); }
 
-        PluginCommand command=plugin.getServer().getPluginCommand(message);
+        final PluginCommand command=this.plugin.getServer()
+                                               .getPluginCommand(message);
 
-        if (!Combat.inCombat(player)){
+        if(!Combat.inCombat(player)){
             return;
         }
 
-        List<String> bannedCommands=config.getBannedCommands();
-        for(String bannedCommand : bannedCommands){
+        final List<String> bannedCommands=this.config.getBannedCommands();
+        for(final String bannedCommand : bannedCommands){
             if(bannedCommand.equalsIgnoreCase(command.getName())){
                 Message.get("banned-command-message")
-                        .replace("%command%", command.getName())
-                        .send(player);
+                       .replace("%command%", command.getName())
+                       .send(player);
                 event.setCancelled(true);
             }
         }
     }
 
     @EventHandler
-    public void onInteract(PlayerInteractEvent event){
+    public void onInteract(final PlayerInteractEvent event){
 
     }
 
     @EventHandler
-    public void onInteractEntity(PlayerInteractEntityEvent event){
+    public void onInteractEntity(final PlayerInteractEntityEvent event){
 
     }
 
     @EventHandler
-    public void onInteractAtEntity(PlayerInteractAtEntityEvent event){
+    public void onInteractAtEntity(final PlayerInteractAtEntityEvent event){
 
     }
 
+    private FreeForAll plugin=null;
+    private Configuration config=null;
 }

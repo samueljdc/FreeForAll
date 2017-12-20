@@ -1,76 +1,76 @@
 package me.angrypostman.freeforall.util;
 
-import me.angrypostman.freeforall.FreeForAll;
-import org.bukkit.configuration.file.FileConfiguration;
-
 import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import me.angrypostman.freeforall.FreeForAll;
+import org.bukkit.configuration.file.FileConfiguration;
 
 public class Configuration{
 
-    private FreeForAll plugin=null;
-    private FileConfiguration configuration=null;
-    private Map<String, Object> values=new HashMap<>();
+    private final Map<String, Object> values=new HashMap<>();
 
-    public Configuration(FreeForAll plugin){
+    public Configuration(final FreeForAll plugin){
         this.plugin=plugin;
         this.configuration=plugin.getConfig();
     }
 
     public FileConfiguration getFileConfiguration(){
-        return configuration;
+        return this.configuration;
     }
 
     public void load(){
 
-        values.clear();
+        this.values.clear();
 
-        values.put("storage.storageMethod", configuration.getString("storage.storageMethod"));
-        values.put("storage.yaml.dataFile", configuration.getString("storage.yaml.dataFile"));
-        values.put("storage.mysql.host", configuration.getString("storage.mysql.host"));
-        values.put("storage.mysql.database", configuration.getString("storage.mysql.database"));
-        values.put("storage.mysql.username", configuration.getString("storage.mysql.username"));
-        values.put("storage.mysql.password", configuration.getString("storage.mysql.password"));
-        values.put("storage.mysql.port", configuration.getInt("storage.mysql.port"));
-        values.put("storage.sqlite.dataFile", configuration.getString("storage.sqlite.dataFile"));
+        this.values.put("storage.storageMethod", this.configuration.getString("storage.storageMethod"));
+        this.values.put("storage.yaml.dataFile", this.configuration.getString("storage.yaml.dataFile"));
+        this.values.put("storage.mysql.host", this.configuration.getString("storage.mysql.host"));
+        this.values.put("storage.mysql.database", this.configuration.getString("storage.mysql.database"));
+        this.values.put("storage.mysql.username", this.configuration.getString("storage.mysql.username"));
+        this.values.put("storage.mysql.password", this.configuration.getString("storage.mysql.password"));
+        this.values.put("storage.mysql.port", this.configuration.getInt("storage.mysql.port"));
+        this.values.put("storage.sqlite.dataFile", this.configuration.getString("storage.sqlite.dataFile"));
 
-        values.put("settings.debugMode", configuration.getBoolean("settings.debugMode"));
+        this.values.put("settings.debugMode", this.configuration.getBoolean("settings.debugMode"));
 
-        values.put("settings.combat.pvpLogger", configuration.getBoolean("settings.combat.pvpLogger"));
-        values.put("settings.combat.disablePlayerCollision", configuration.getBoolean("settings.combat.disablePlayerCollision"));
-        values.put("settings.combat.pvpLoggerDuration", configuration.getInt("settings.combat.pvpLoggerDuration"));
-        values.put("settings.combat.gainedLost", configuration.getString("settings.combat.gainedLost"));
+        this.values.put("settings.combat.pvpLogger", this.configuration.getBoolean("settings.combat.pvpLogger"));
+        this.values.put("settings.combat.disablePlayerCollision",
+                        this.configuration.getBoolean("settings.combat.disablePlayerCollision"));
+        this.values.put("settings.combat.pvpLoggerDuration",
+                        this.configuration.getInt("settings.combat.pvpLoggerDuration"));
+        this.values.put("settings.combat.gainedLost", this.configuration.getString("settings.combat.gainedLost"));
 
-        values.put("settings.combat.bannedCommands", configuration.getStringList("settings.combat.bannedCommands"));
-        values.put("settings.chat.chatFormatting", configuration.getBoolean("settings.chat.chatFormatting"));
-        values.put("settings.chat.chatFormat", configuration.getStringList("settings.chat.chatFormat"));
+        this.values.put("settings.combat.bannedCommands",
+                        this.configuration.getStringList("settings.combat.bannedCommands"));
+        this.values.put("settings.chat.chatFormatting", this.configuration.getBoolean("settings.chat.chatFormatting"));
+        this.values.put("settings.chat.chatFormat", this.configuration.getStringList("settings.chat.chatFormat"));
 
-        values.put("settings.defaultKit", configuration.getString("settings.defaultKit"));
-        values.put("version", configuration.getString("version"));
-
+        this.values.put("settings.defaultKit", this.configuration.getString("settings.defaultKit"));
+        this.values.put("version", this.configuration.getString("version"));
     }
 
     public void saveConfiguration(){
-        values.forEach((entry, value) -> configuration.set(entry, value));
-        plugin.saveConfig();
+        this.values.forEach((entry, value)->this.configuration.set(entry, value));
+        this.plugin.saveConfig();
     }
 
     public void unload(){
-        values.clear();
+        this.values.clear();
     }
 
-    public Object get(String path){
-        return values.get(path);
+    public Object get(final String path){
+        return this.values.get(path);
     }
 
-    public void set(String path, Object value){
-        values.put(path, value);
+    public void set(final String path,
+                    final Object value){
+        this.values.put(path, value);
     }
 
     public String getDefaultKit(){
-        return (String) values.get("settings.defaultKit");
+        return (String) this.values.get("settings.defaultKit");
     }
 
     public boolean isPvPLogger(){
@@ -78,64 +78,65 @@ public class Configuration{
     }
 
     public int getPvPLoggerDuration(){
-        return (int) values.get("settings.combat.pvpLoggerDuration");
+        return (int) this.values.get("settings.combat.pvpLoggerDuration");
     }
 
     public String getGainedLost(){
-        return (String)values.get("settings.combat.gainedLost");
+        return (String) this.values.get("settings.combat.gainedLost");
     }
 
     public List<String> getBannedCommands(){
-        return (List<String>) values.get("settings.combat.bannedCommands");
+        return (List<String>) this.values.get("settings.combat.bannedCommands");
     }
 
     public boolean isChatFormatting(){
-        return (boolean)values.get("settings.chat.chatFormatting");
+        return (boolean) this.values.get("settings.chat.chatFormatting");
     }
 
     public String getChatFormat(){
-        return (String)values.get("settings.chat.chatFormat");
+        return (String) this.values.get("settings.chat.chatFormat");
     }
 
     public boolean isDebugMode(){
-        return (boolean)values.get("settings.debugMode");
+        return (boolean) this.values.get("settings.debugMode");
     }
 
     public String getVersion(){
-        return (String) values.get("version");
+        return (String) this.values.get("version");
     }
 
     public String getStorageMethod(){
-        return (String) values.get("storage.storageMethod");
+        return (String) this.values.get("storage.storageMethod");
     }
 
     public File getYAMLDataFile(){
-        return new File(plugin.getDataFolder(), (String) values.get("storage.yaml.dataFile"));
+        return new File(this.plugin.getDataFolder(), (String) this.values.get("storage.yaml.dataFile"));
     }
 
     public String getSQLHost(){
-        return (String) values.get("storage.mysql.host");
+        return (String) this.values.get("storage.mysql.host");
     }
 
     public String getSQLDatabase(){
-        return (String) values.get("storage.mysql.database");
+        return (String) this.values.get("storage.mysql.database");
     }
 
     public String getSQLUser(){
-        return (String) values.get("storage.mysql.username");
+        return (String) this.values.get("storage.mysql.username");
     }
 
     public String getSQLPassword(){
-        return (String) values.get("storage.mysql.password");
+        return (String) this.values.get("storage.mysql.password");
     }
 
     public int getSQLPort(){
-        return (int) values.get("storage.mysql.port");
+        return (int) this.values.get("storage.mysql.port");
     }
 
     public File getSQLiteDataFile(){
-        return new File(plugin.getDataFolder(), (String) values.get("storage.sqlite.dataFile"));
+        return new File(this.plugin.getDataFolder(), (String) this.values.get("storage.sqlite.dataFile"));
     }
 
-
+    private FreeForAll plugin=null;
+    private FileConfiguration configuration=null;
 }

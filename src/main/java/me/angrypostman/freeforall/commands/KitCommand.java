@@ -1,5 +1,6 @@
 package me.angrypostman.freeforall.commands;
 
+import java.util.Optional;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.kit.FFAKit;
@@ -14,77 +15,83 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.Optional;
-
 public class KitCommand implements CommandExecutor{
 
-    private FreeForAll plugin=null;
-    private DataStorage storage=null;
-
-    public KitCommand(FreeForAll plugin){
+    public KitCommand(final FreeForAll plugin){
         this.plugin=plugin;
         this.storage=plugin.getDataStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args){
+    public boolean onCommand(final CommandSender commandSender,
+                             final Command command,
+                             final String commandLabel,
+                             final String[] args){
 
-        if(!command.getName().equalsIgnoreCase("kit")) return false;
+        if(!command.getName()
+                   .equalsIgnoreCase("kit")){ return false; }
 
         if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.kit")){
-            Message.get("no-permission-message").send(commandSender);
+            Message.get("no-permission-message")
+                   .send(commandSender);
             return true;
         }
 
-        Player player=(Player) commandSender;
-        Optional<User> userOptional=UserCache.getUserIfPresent(player);
+        final Player player=(Player) commandSender;
+        final Optional<User> userOptional=UserCache.getUserIfPresent(player);
 
         if(!userOptional.isPresent()){
-            player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog");
+            player.sendMessage(ChatColor.RED+"Failed to load your player data, please relog");
             return true;
         }
 
-        User user=userOptional.get();
+        final User user=userOptional.get();
 
-        if (user.isSpectating()){
-            Message.get("no-permission-while-spectating").send(player);
+        if(user.isSpectating()){
+            Message.get("no-permission-while-spectating")
+                   .send(player);
             return true;
         }
 
-        if (Combat.hasBeenInCombat(user)){
-            Message.get("combat-kit-change-message").send(player);
+        if(Combat.hasBeenInCombat(user)){
+            Message.get("combat-kit-change-message")
+                   .send(player);
             return true;
         }
 
-        if(args.length < 1){
+        if(args.length<1){
             Message.get("correct-usage-message")
-                    .replace("%commandName%", command.getName())
-                    .replace("%usage%", command.getUsage())
-                    .send(player);
+                   .replace("%commandName%", command.getName())
+                   .replace("%usage%", command.getUsage())
+                   .send(player);
             return true;
         }
 
-        String kitName=args[0];
-        Optional<FFAKit> kitOptional=KitManager.getKit(kitName);
+        final String kitName=args[0];
+        final Optional<FFAKit> kitOptional=KitManager.getKit(kitName);
 
         if(!kitOptional.isPresent()){
             Message.get("unknown-kit-message")
-                    .replace("%kitName%", kitName)
-                    .send(player);
+                   .replace("%kitName%", kitName)
+                   .send(player);
             return true;
         }
 
-        FFAKit kit=kitOptional.get();
+        final FFAKit kit=kitOptional.get();
 
-        if(kit.hasPermission() && !player.hasPermission(kit.getPermission())){
-            Message.get("no-permission-message").send(player);
+        if(kit.hasPermission()&&!player.hasPermission(kit.getPermission())){
+            Message.get("no-permission-message")
+                   .send(player);
             return true;
         }
 
         KitManager.giveItems(user, kit);
         Message.get("kit-given-message")
-                .replace("%kitName%", kit.getName())
-                .send(player);
+               .replace("%kitName%", kit.getName())
+               .send(player);
         return true;
     }
+
+    private FreeForAll plugin=null;
+    private DataStorage storage=null;
 }

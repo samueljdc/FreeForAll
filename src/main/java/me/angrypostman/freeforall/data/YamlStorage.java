@@ -1,6 +1,12 @@
 package me.angrypostman.freeforall.data;
 
 import com.google.common.base.Preconditions;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.user.User;
 import me.angrypostman.freeforall.util.FileUtils;
@@ -9,23 +15,13 @@ import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-
 public class YamlStorage extends DataStorage{
 
-    private FreeForAll plugin=null;
-    private File file=null;
-    private FileConfiguration config=null;
-    private List<Location> locations=null;
-
-    public YamlStorage(FreeForAll plugin, File file){
+    public YamlStorage(final FreeForAll plugin,
+                       final File file){
         Preconditions.checkNotNull(file, "file");
-        Preconditions.checkArgument(FileUtils.getFileExtension(file).equalsIgnoreCase("yml"), "file type must be a YML file");
+        Preconditions.checkArgument(FileUtils.getFileExtension(file)
+                                             .equalsIgnoreCase("yml"), "file type must be a YML file");
         this.file=file;
         this.locations=new ArrayList<>();
         this.plugin=plugin;
@@ -34,22 +30,23 @@ public class YamlStorage extends DataStorage{
     @Override
     public boolean initialize(){
 
-        config=new YamlConfiguration();
+        this.config=new YamlConfiguration();
 
         if(!getFile().exists()){
             try{
-                if(file.getParentFile() != null){
-                    file.getParentFile().mkdirs();
+                if(this.file.getParentFile()!=null){
+                    this.file.getParentFile()
+                             .mkdirs();
                 }
-                file.createNewFile();
-            } catch(IOException e){
+                this.file.createNewFile();
+            }catch(final IOException e){
                 e.printStackTrace();
             }
         }
 
         try{
-            config.load(file);
-        } catch(InvalidConfigurationException | IOException e){
+            this.config.load(this.file);
+        }catch(InvalidConfigurationException | IOException e){
             e.printStackTrace();
             return false;
         }
@@ -63,37 +60,38 @@ public class YamlStorage extends DataStorage{
     }
 
     @Override
-    public Optional<User> createUser(UUID uuid, String playerName){
+    public Optional<User> createUser(final UUID uuid,
+                                     final String playerName){
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(UUID uuid){
+    public Optional<User> loadUser(final UUID uuid){
         return Optional.empty();
     }
 
     @Override
-    public Optional<User> loadUser(String lookupName){
+    public Optional<User> loadUser(final String lookupName){
         return Optional.empty();
     }
 
     @Override
-    public void saveUser(User user){
+    public void saveUser(final User user){
 
     }
 
     @Override
-    public List<User> getLeaderboardTop(int page){
+    public List<User> getLeaderboardTop(final int page){
         return null;
     }
 
     @Override
-    public void saveLocation(Location location){
+    public void saveLocation(final Location location){
 
     }
 
     @Override
-    public void deleteLocation(int spawnId){
+    public void deleteLocation(final int spawnId){
 
     }
 
@@ -108,10 +106,15 @@ public class YamlStorage extends DataStorage{
     }
 
     public File getFile(){
-        return file;
+        return this.file;
     }
 
     public FileConfiguration getConfig(){
-        return config;
+        return this.config;
     }
+
+    private FreeForAll plugin=null;
+    private File file=null;
+    private FileConfiguration config=null;
+    private List<Location> locations=null;
 }

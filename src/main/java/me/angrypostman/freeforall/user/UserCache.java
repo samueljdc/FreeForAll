@@ -1,19 +1,14 @@
 package me.angrypostman.freeforall.user;
 
 import com.google.common.base.Preconditions;
-import me.angrypostman.freeforall.FreeForAll;
-import org.bukkit.entity.Player;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import me.angrypostman.freeforall.FreeForAll;
+import org.bukkit.entity.Player;
 
 public class UserCache{
-
-    private static List<User> users=null;
-    private static List<User> spectators=null;
-    private static FreeForAll plugin=null;
 
     static{
         users=new ArrayList<>();
@@ -21,61 +16,61 @@ public class UserCache{
         plugin=FreeForAll.getPlugin();
     }
 
-    public static Optional<User> getUser(Player player){
+    public static Optional<User> getUser(final Player player){
         Preconditions.checkNotNull(player, "player cannot be null");
         return getUser(player.getUniqueId());
     }
 
-    public static Optional<User> getUser(UUID uuid){
+    public static Optional<User> getUser(final UUID uuid){
         Preconditions.checkNotNull(uuid, "uuid cannot be null");
-        Optional<User> user=users.stream().filter(u -> u.getUniqueId().equals(uuid)).findFirst();
-        return user.isPresent() ? user : plugin.getDataStorage().loadUser(uuid);
+        final Optional<User> user=users.stream()
+                                       .filter(u->u.getUniqueId()
+                                                   .equals(uuid))
+                                       .findFirst();
+        return user.isPresent() ? user : plugin.getDataStorage()
+                                               .loadUser(uuid);
     }
 
-    public static Optional<User> getUser(String lookupName){
-        Preconditions.checkArgument(lookupName != null && lookupName.length() > 0, "lookupName cannnot be null or effectively null");
-        Optional<User> user=users.stream().filter(u -> u.getLookupName().equals(lookupName)).findFirst();
-        return user.isPresent() ? user : plugin.getDataStorage().loadUser(lookupName);
+    public static Optional<User> getUser(final String lookupName){
+        Preconditions.checkArgument(lookupName!=null&&lookupName.length()>0,
+                                    "lookupName cannnot be null or effectively null");
+        final Optional<User> user=users.stream()
+                                       .filter(u->u.getLookupName()
+                                                   .equals(lookupName))
+                                       .findFirst();
+        return user.isPresent() ? user : plugin.getDataStorage()
+                                               .loadUser(lookupName);
     }
 
-    public static Optional<User> getUserIfPresent(Player player){
+    public static Optional<User> getUserIfPresent(final Player player){
         Preconditions.checkNotNull(player, "player cannot be null");
         Preconditions.checkArgument(player.isOnline(), "player not online");
         return getUserIfPresent(player.getUniqueId());
     }
 
-    public static Optional<User> getUserIfPresent(UUID uuid){
+    public static Optional<User> getUserIfPresent(final UUID uuid){
         Preconditions.checkNotNull(uuid, "uuid cannot be null");
-        return users.stream().filter(user -> user.getUniqueId().equals(uuid)).findFirst();
+        return users.stream()
+                    .filter(user->user.getUniqueId()
+                                      .equals(uuid))
+                    .findFirst();
     }
 
-    public static Optional<User> getUserIfPresent(String lookupName){
-        Preconditions.checkArgument(lookupName != null && lookupName.length() > 0, "lookupName cannot be null or effectively null");
-        return users.stream().filter(user -> user.getLookupName().equals(lookupName)).findFirst();
-    }
-
-    public static boolean isSpectating(User user){
-        Preconditions.checkNotNull(user, "user");
-        Preconditions.checkArgument(user.isOnline(), "user not online");
-        return isSpectating(user.getBukkitPlayer());
-    }
-
-    public static boolean isSpectating(Player player){
-        Preconditions.checkNotNull(player, "player");
-        Preconditions.checkArgument(player.isOnline(), "player not online");
-        return isSpectating(player.getUniqueId());
-    }
-
-    public static boolean isSpectating(UUID uuid){
-        Preconditions.checkNotNull(uuid, "uuid");
-        return spectators.stream().anyMatch(user -> user.getUniqueId().equals(uuid));
+    public static Optional<User> getUserIfPresent(final String lookupName){
+        Preconditions.checkArgument(lookupName!=null&&lookupName.length()>0,
+                                    "lookupName cannot be null or effectively null");
+        return users.stream()
+                    .filter(user->user.getLookupName()
+                                      .equals(lookupName))
+                    .findFirst();
     }
 
     public static List<User> getSpectators(){
         return new ArrayList<>(spectators);
     }
 
-    public static void setSpectating(User user, boolean spectating){
+    public static void setSpectating(final User user,
+                                     final boolean spectating){
         if(spectating){
             if(!isSpectating(user)){ //No duplicate entries in spectator list
                 spectators.add(user);
@@ -85,11 +80,30 @@ public class UserCache{
         }
     }
 
+    public static boolean isSpectating(final User user){
+        Preconditions.checkNotNull(user, "user");
+        Preconditions.checkArgument(user.isOnline(), "user not online");
+        return isSpectating(user.getBukkitPlayer());
+    }
+
+    public static boolean isSpectating(final Player player){
+        Preconditions.checkNotNull(player, "player");
+        Preconditions.checkArgument(player.isOnline(), "player not online");
+        return isSpectating(player.getUniqueId());
+    }
+
+    public static boolean isSpectating(final UUID uuid){
+        Preconditions.checkNotNull(uuid, "uuid");
+        return spectators.stream()
+                         .anyMatch(user->user.getUniqueId()
+                                             .equals(uuid));
+    }
+
     public static List<User> getUsers(){
         return new ArrayList<>(users);
     }
 
-    public static void cacheUser(User user){
+    public static void cacheUser(final User user){
         Preconditions.checkNotNull(user, "user cannot be null");
 
         //Expire existing data
@@ -97,10 +111,13 @@ public class UserCache{
         users.add(user);
     }
 
-    public static void expireUser(User user){
+    public static void expireUser(final User user){
         Preconditions.checkNotNull(user, "user cannot be null");
         UserCache.users.remove(user);
         UserCache.spectators.remove(user);
     }
 
+    private static List<User> users=null;
+    private static List<User> spectators=null;
+    private static FreeForAll plugin=null;
 }

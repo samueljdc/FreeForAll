@@ -1,5 +1,8 @@
 package me.angrypostman.freeforall.listeners;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.kit.FFAKit;
@@ -18,38 +21,31 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
-
 import static me.angrypostman.freeforall.FreeForAll.doSyncLater;
 
 public class PlayerJoinListener implements Listener{
 
-    private FreeForAll plugin=null;
-    private DataStorage dataStorage=null;
-
-    public PlayerJoinListener(FreeForAll plugin){
+    public PlayerJoinListener(final FreeForAll plugin){
         this.plugin=plugin;
         this.dataStorage=plugin.getDataStorage();
     }
 
     @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event){
+    public void onPlayerJoin(final PlayerJoinEvent event){
 
-        Player player=event.getPlayer();
-        Optional<User> optional=UserCache.getUserIfPresent(player);
+        final Player player=event.getPlayer();
+        final Optional<User> optional=UserCache.getUserIfPresent(player);
 
         if(!optional.isPresent()){
-            plugin.getLogger().info("Failed to load user data for '"+player.getName()+"("+player.getUniqueId()+") " +
-                    "during login validation.");
-            player.kickPlayer(ChatColor.RED + "Failed to load your player data, please relog.");
+            this.plugin.getLogger()
+                       .info("Failed to load user data for '"+player.getName()+"("+player.getUniqueId()+") "+"during login validation.");
+            player.kickPlayer(ChatColor.RED+"Failed to load your player data, please relog.");
             return;
         }
 
-        User user=optional.get();
+        final User user=optional.get();
 
-        PlayerInventory inventory=player.getInventory();
+        final PlayerInventory inventory=player.getInventory();
         inventory.clear();
         inventory.setArmorContents(null);
 
@@ -62,35 +58,39 @@ public class PlayerJoinListener implements Listener{
         player.setTotalExperience(0);
 
         Message message=Message.get("join-message-broadcast");
-        if(message.getContent() != null && !message.getContent().isEmpty()){
+        if(message.getContent()!=null&&!message.getContent()
+                                               .isEmpty()){
             message=message.replace("%player%", user.getName());
             event.setJoinMessage(message.getContent());
         }
 
-        UserCache.getSpectators().forEach(online->{
-            if (player.canSee(online.getBukkitPlayer())){
-                player.hidePlayer(online.getBukkitPlayer());
-            }
-        });
+        UserCache.getSpectators()
+                 .forEach(online->{
+                     if(player.canSee(online.getBukkitPlayer())){
+                         player.hidePlayer(online.getBukkitPlayer());
+                     }
+                 });
 
-        doSyncLater(() -> {
+        doSyncLater(()->{
 
             if(player.hasPermission("freeforall.viewupdates")){
-                Updater updater=plugin.getUpdater();
+                final Updater updater=this.plugin.getUpdater();
 
-                String latestVersion=updater.getLatestVersion();
-                if(latestVersion != null){
-                    player.sendMessage(ChatColor.GREEN + "A new version of FreeForAll is available for download (v" + latestVersion + ")!");
+                final String latestVersion=updater.getLatestVersion();
+                if(latestVersion!=null){
+                    player.sendMessage(
+                            ChatColor.GREEN+"A new version of FreeForAll is available for download (v"+latestVersion+")!");
                 }
             }
 
-            Location location;
+            final Location location;
 
-            List<Location> locations=dataStorage.getLocations();
-            if(locations == null || locations.size() == 0){
-                location=player.getWorld().getSpawnLocation();
-            } else{
-                Random random=new Random();
+            final List<Location> locations=this.dataStorage.getLocations();
+            if(locations==null||locations.size()==0){
+                location=player.getWorld()
+                               .getSpawnLocation();
+            }else{
+                final Random random=new Random();
                 location=locations.get(random.nextInt(locations.size()));
             }
 
@@ -99,23 +99,25 @@ public class PlayerJoinListener implements Listener{
             Optional<FFAKit> kitOptional=KitManager.getKitOf(player);
             if(!kitOptional.isPresent()){
                 kitOptional=KitManager.getDefaultKit();
-                if(!kitOptional.isPresent()) return;
+                if(!kitOptional.isPresent()){ return; }
             }
 
-            FFAKit ffaKit=kitOptional.get();
+            final FFAKit ffaKit=kitOptional.get();
             KitManager.giveItems(user, ffaKit);
 
             //A second later should be fine for this.
         }, 20L);
-
     }
 
-    private double getMaxHealth(Player player){
+    private double getMaxHealth(final Player player){
         try{
-            return player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue();
-        } catch(NoClassDefFoundError ex){
+            return player.getAttribute(Attribute.GENERIC_MAX_HEALTH)
+                         .getBaseValue();
+        }catch(final NoClassDefFoundError ex){
             return player.getMaxHealth();
         }
     }
 
+    private FreeForAll plugin=null;
+    private DataStorage dataStorage=null;
 }

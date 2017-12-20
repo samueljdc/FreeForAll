@@ -6,13 +6,10 @@ import me.angrypostman.freeforall.statistics.Statistic;
 
 public class UserData{
 
-    private User user;
-    private StatValue kills;
-    private StatValue killStreak;
-    private StatValue deaths;
-    private StatValue points;
-
-    UserData(User user, int kills, int deaths, int points){
+    UserData(final User user,
+             final int kills,
+             final int deaths,
+             final int points){
         this.kills=new StatValue(user, Statistic.getStatistic("kills"), kills);
         this.deaths=new StatValue(user, Statistic.getStatistic("deaths"), deaths);
         this.points=new StatValue(user, Statistic.getStatistic("points"), points);
@@ -20,70 +17,74 @@ public class UserData{
     }
 
     public User getUser(){
-        return user;
-    }
-
-    public StatValue getKills(){
-        return kills.clone();
+        return this.user;
     }
 
     public void addKill(){
-        kills.setValue(kills.getValue()+1);
-        killStreak.setValue(killStreak.getValue()+1);
-    }
-
-    public StatValue getDeaths(){
-        return deaths.clone();
+        this.kills.setValue(this.kills.getValue()+1);
+        this.killStreak.setValue(this.killStreak.getValue()+1);
     }
 
     public void addDeath(){
-        deaths.setValue(deaths.getValue()+1);
+        this.deaths.setValue(this.deaths.getValue()+1);
     }
 
     public double getKillDeathRatio(){
-        if(getDeaths().getValue() <= 1){ //avoid divide by 0 errors and no point in dividing by 1
+        if(getDeaths().getValue()<=1){ //avoid divide by 0 errors and no point in dividing by 1
             return getKills().getValue();
         }
-        return Double.parseDouble(String.format("%.2f", ((double) getKills().getValue() / getDeaths().getValue())));
+        return Double.parseDouble(String.format("%.2f", ((double) getKills().getValue()/getDeaths().getValue())));
+    }
+
+    public StatValue getKills(){
+        return this.kills.clone();
+    }
+
+    public StatValue getDeaths(){
+        return this.deaths.clone();
     }
 
     public boolean hasKillStreak(){
-        return getKillStreak().getValue() > 1;
+        return getKillStreak().getValue()>1;
     }
 
     public StatValue getKillStreak(){
-        return killStreak;
+        return this.killStreak;
     }
 
     public void endStreak(){
-        killStreak.setValue(0);
+        this.killStreak.setValue(0);
     }
 
     public StatValue getPoints(){
-        return points.clone();
+        return this.points.clone();
     }
 
-    public void addPoints(int add){
-        Preconditions.checkArgument(add > 0, "points to add must be greater than 0");
-        points.setValue(points.getValue() + add);
+    public void addPoints(final int add){
+        Preconditions.checkArgument(add>0, "points to add must be greater than 0");
+        this.points.setValue(this.points.getValue()+add);
     }
 
-    public void subtractPoints(int subtract){
-        Preconditions.checkArgument(subtract >= 0, "points to subtract must be greater than 0");
-        Preconditions.checkArgument(this.points.getValue() - subtract >= 0, "cannot reduce a players points below 0");
-        points.setValue(points.getValue() - subtract);
+    public void subtractPoints(final int subtract){
+        Preconditions.checkArgument(subtract>=0, "points to subtract must be greater than 0");
+        Preconditions.checkArgument(this.points.getValue()-subtract>=0, "cannot reduce a players points below 0");
+        this.points.setValue(this.points.getValue()-subtract);
     }
-
 
     public StatValue getRank(){
         return new StatValue(null, null);
     }
 
     public void resetStats(){
-        kills.setValue(0);
-        deaths.setValue(0);
-        killStreak.setValue(0);
-        points.setValue(0);
+        this.kills.setValue(0);
+        this.deaths.setValue(0);
+        this.killStreak.setValue(0);
+        this.points.setValue(0);
     }
 
+    private User user;
+    private final StatValue kills;
+    private final StatValue killStreak;
+    private final StatValue deaths;
+    private final StatValue points;
 }

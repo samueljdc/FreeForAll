@@ -1,5 +1,8 @@
 package me.angrypostman.freeforall.commands;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.kit.FFAKit;
 import me.angrypostman.freeforall.kit.KitManager;
@@ -14,77 +17,80 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.potion.PotionEffect;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 public class SaveKitCommand implements CommandExecutor{
 
-    private FreeForAll plugin=null;
-
-    public SaveKitCommand(FreeForAll plugin){
+    public SaveKitCommand(final FreeForAll plugin){
         this.plugin=plugin;
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandLabel, String[] args){
+    public boolean onCommand(final CommandSender commandSender,
+                             final Command command,
+                             final String commandLabel,
+                             final String[] args){
 
-        if(!command.getName().equalsIgnoreCase("savekit")) return false;
+        if(!command.getName()
+                   .equalsIgnoreCase("savekit")){ return false; }
 
         if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.savekit")){
-            Message.get("no-permission-message").send(commandSender);
+            Message.get("no-permission-message")
+                   .send(commandSender);
             return true;
         }
 
-        Player player=(Player) commandSender;
-        PlayerInventory inventory=player.getInventory();
+        final Player player=(Player) commandSender;
+        final PlayerInventory inventory=player.getInventory();
 
-        if (UserCache.isSpectating(player)){
-            Message.get("no-permission-while-spectating").send(player);
+        if(UserCache.isSpectating(player)){
+            Message.get("no-permission-while-spectating")
+                   .send(player);
             return true;
         }
 
-        if(args.length < 1){
+        if(args.length<1){
             Message.get("correct-usage-message")
-                    .replace("%commandName%", command.getName())
-                    .replace("%usage%", command.getUsage())
-                    .send(player);
+                   .replace("%commandName%", command.getName())
+                   .replace("%usage%", command.getUsage())
+                   .send(player);
             return true;
         }
 
-        String name=args[0];
-        String permission=(args.length > 1 ? args[1].toLowerCase() : null);
-        if(permission != null && !permission.matches("([a-z]+\\.?)+")){
+        final String name=args[0];
+        final String permission=(args.length>1 ? args[1].toLowerCase() : null);
+        if(permission!=null&&!permission.matches("([a-z]+\\.?)+")){
             Message.get("invalid-permission-node")
-                    .send(player);
+                   .send(player);
             return true;
         }
 
-        if(permission != null && KitManager.getKits().stream().anyMatch(ffakit -> ffakit.getPermission()
-                .equalsIgnoreCase(permission))){
+        if(permission!=null&&KitManager.getKits()
+                                       .stream()
+                                       .anyMatch(ffakit->ffakit.getPermission()
+                                                               .equalsIgnoreCase(permission))){
             Message.get("kit-permission-nodes-unique-message")
-                    .send(player);
+                   .send(player);
             return true;
         }
 
-        if(KitManager.getKit(name).isPresent()){
+        if(KitManager.getKit(name)
+                     .isPresent()){
             Message.get("kit-already-exists-message")
-                    .send(player);
+                   .send(player);
             return true;
         }
 
-        FFAKit kit=new FFAKit(name, permission);
+        final FFAKit kit=new FFAKit(name, permission);
         kit.setHelmet(inventory.getHelmet());
         kit.setChestplate(inventory.getChestplate());
         kit.setLeggings(inventory.getLeggings());
         kit.setBoots(inventory.getBoots());
 
-        List<ItemStack> inventoryItems=new ArrayList<>();
+        final List<ItemStack> inventoryItems=new ArrayList<>();
         Arrays.stream(inventory.getStorageContents())
-                .filter(stack -> stack != null && stack.getType() != Material.AIR)
-                .forEach(inventoryItems::add);
+              .filter(stack->stack!=null&&stack.getType()!=Material.AIR)
+              .forEach(inventoryItems::add);
 
-        List<PotionEffect> potionEffects=new ArrayList<>();
+        final List<PotionEffect> potionEffects=new ArrayList<>();
         potionEffects.addAll(player.getActivePotionEffects());
 
         kit.setInventoryItems(inventoryItems);
@@ -92,8 +98,10 @@ public class SaveKitCommand implements CommandExecutor{
         KitManager.saveKit(kit);
 
         Message.get("kit-created-message")
-                .replace("%kitName%", kit.getName())
-                .send(player);
+               .replace("%kitName%", kit.getName())
+               .send(player);
         return true;
     }
+
+    private FreeForAll plugin=null;
 }

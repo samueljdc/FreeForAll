@@ -3,7 +3,6 @@ package me.angrypostman.freeforall.commands;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.util.Message;
-
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -15,32 +14,39 @@ import static me.angrypostman.freeforall.FreeForAll.doSync;
 
 public class SetSpawnCommand implements CommandExecutor{
 
-    private FreeForAll plugin;
-    private DataStorage dataStorage;
-    public SetSpawnCommand(FreeForAll plugin){
+    public SetSpawnCommand(final FreeForAll plugin){
         this.plugin=plugin;
         this.dataStorage=plugin.getDataStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String label, String[] args){
+    public boolean onCommand(final CommandSender commandSender,
+                             final Command command,
+                             final String label,
+                             final String[] args){
 
-        if(!command.getName().equalsIgnoreCase("setspawn")) return false;
+        if(!command.getName()
+                   .equalsIgnoreCase("setspawn")){ return false; }
 
         if(!(commandSender instanceof Player)||!commandSender.hasPermission("freeforall.command.setspawn")){
-            Message.get("no-permission-message").send(commandSender);
+            Message.get("no-permission-message")
+                   .send(commandSender);
             return true;
         }
 
-        Player player=(Player) commandSender;
+        final Player player=(Player) commandSender;
 
-        Location playerLocation=player.getLocation();
+        final Location playerLocation=player.getLocation();
 
-        doAsync(() -> {
-            dataStorage.saveLocation(playerLocation);
-            doSync(()->Message.get("spawn-saved-message").send(player));
+        doAsync(()->{
+            this.dataStorage.saveLocation(playerLocation);
+            doSync(()->Message.get("spawn-saved-message")
+                              .send(player));
         });
 
         return true;
     }
+
+    private final FreeForAll plugin;
+    private final DataStorage dataStorage;
 }

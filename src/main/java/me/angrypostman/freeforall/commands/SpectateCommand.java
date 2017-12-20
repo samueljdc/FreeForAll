@@ -1,5 +1,8 @@
 package me.angrypostman.freeforall.commands;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.ThreadLocalRandom;
 import me.angrypostman.freeforall.FreeForAll;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.kit.FFAKit;
@@ -17,65 +20,66 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.PlayerInventory;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ThreadLocalRandom;
-
 public class SpectateCommand implements CommandExecutor{
 
-    private FreeForAll plugin;
-    private DataStorage dataStorage;
-
-    public SpectateCommand(FreeForAll plugin){
+    public SpectateCommand(final FreeForAll plugin){
         this.plugin=plugin;
         this.dataStorage=plugin.getDataStorage();
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args){
+    public boolean onCommand(final CommandSender sender,
+                             final Command command,
+                             final String label,
+                             final String[] args){
 
-        if(!command.getName().equalsIgnoreCase("spectate")) return false;
+        if(!command.getName()
+                   .equalsIgnoreCase("spectate")){ return false; }
 
-        if(!(sender instanceof Player) || !sender.hasPermission("freeforall.command.spectate")){
-            Message.get("no-permission-message").send(sender);
+        if(!(sender instanceof Player)||!sender.hasPermission("freeforall.command.spectate")){
+            Message.get("no-permission-message")
+                   .send(sender);
             return true;
         }
 
-        Player player=(Player) sender;
-        Optional<User> optional=UserCache.getUserIfPresent(player);
+        final Player player=(Player) sender;
+        final Optional<User> optional=UserCache.getUserIfPresent(player);
 
         if(!optional.isPresent()){
-            player.sendMessage(ChatColor.RED + "Failed to load your player data, please relog");
+            player.sendMessage(ChatColor.RED+"Failed to load your player data, please relog");
             return true;
         }
 
-        User user=optional.get();
-        if (user.isSpectating()){
+        final User user=optional.get();
+        if(user.isSpectating()){
 
-            if (args.length > 0){
-                Player target=Bukkit.getPlayer(args[0]);
-                if (target == null || !target.isOnline()){
+            if(args.length>0){
+                final Player target=Bukkit.getPlayer(args[0]);
+                if(target==null||!target.isOnline()){
                     Message.get("player-not-found-message")
-                            .replace("%player%", args[0])
-                            .send(player);
+                           .replace("%player%", args[0])
+                           .send(player);
                 }
                 player.teleport(target);
                 return true;
             }
 
-            Bukkit.getOnlinePlayers().forEach(online->{
-                if (!online.canSee(player)){
-                    online.showPlayer(player);
-                }
-            });
+            Bukkit.getOnlinePlayers()
+                  .forEach(online->{
+                      if(!online.canSee(player)){
+                          online.showPlayer(player);
+                      }
+                  });
 
-            Location location;
+            final Location location;
 
-            List<Location> locations=dataStorage.getLocations();
-            if(locations == null || locations.size() == 0){
-                location=player.getWorld().getSpawnLocation();
-            }else {
-                location=locations.get(ThreadLocalRandom.current().nextInt(locations.size()));
+            final List<Location> locations=this.dataStorage.getLocations();
+            if(locations==null||locations.size()==0){
+                location=player.getWorld()
+                               .getSpawnLocation();
+            }else{
+                location=locations.get(ThreadLocalRandom.current()
+                                                        .nextInt(locations.size()));
             }
 
             player.teleport(location);
@@ -84,55 +88,61 @@ public class SpectateCommand implements CommandExecutor{
 
             UserCache.setSpectating(user, false);
 
-            Message.get("spectator-disabled-message").send(player);
+            Message.get("spectator-disabled-message")
+                   .send(player);
 
             Optional<FFAKit> kitOptional=KitManager.getKitOf(player);
             if(!kitOptional.isPresent()){
                 kitOptional=KitManager.getDefaultKit();
-                if(!kitOptional.isPresent()) return true;
+                if(!kitOptional.isPresent()){ return true; }
             }
 
-            FFAKit ffaKit=kitOptional.get();
+            final FFAKit ffaKit=kitOptional.get();
             KitManager.giveItems(user, ffaKit);
+        }else{
 
-        } else {
-
-            if (Combat.hasBeenInCombat(user)){
-                Message.get("spectator-in-combat-message").send(player);
+            if(Combat.hasBeenInCombat(user)){
+                Message.get("spectator-in-combat-message")
+                       .send(player);
                 return true;
             }
 
-            Bukkit.getOnlinePlayers().forEach(online->{
-                if(online.canSee(player)){
-                    online.hidePlayer(player);
-                }
-            });
+            Bukkit.getOnlinePlayers()
+                  .forEach(online->{
+                      if(online.canSee(player)){
+                          online.hidePlayer(player);
+                      }
+                  });
 
-            PlayerInventory inventory=player.getInventory();
+            final PlayerInventory inventory=player.getInventory();
             inventory.setArmorContents(null);
             inventory.clear();
 
-            player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
+            player.getActivePotionEffects()
+                  .forEach(effect->player.removePotionEffect(effect.getType()));
 
             player.updateInventory();
             player.setAllowFlight(true);
             player.setFlying(true);
 
-            if (args.length > 0){
-                Player target=Bukkit.getPlayer(args[0]);
-                if (target == null || !target.isOnline()){
+            if(args.length>0){
+                final Player target=Bukkit.getPlayer(args[0]);
+                if(target==null||!target.isOnline()){
                     Message.get("player-not-found-message")
-                            .replace("%player%", args[0])
-                            .send(player);
+                           .replace("%player%", args[0])
+                           .send(player);
                 }
                 player.teleport(target);
             }
 
             UserCache.setSpectating(user, true);
-            Message.get("spectator-enabled-message").send(player);
-
+            Message.get("spectator-enabled-message")
+                   .send(player);
         }
 
         return true;
     }
+
+    private final FreeForAll plugin;
+    private final DataStorage dataStorage;
 }

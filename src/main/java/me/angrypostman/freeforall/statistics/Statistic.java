@@ -1,7 +1,6 @@
 package me.angrypostman.freeforall.statistics;
 
 import com.google.common.collect.Maps;
-
 import java.util.Locale;
 import java.util.Map;
 
@@ -16,45 +15,53 @@ public enum Statistic{
     private static final Map<String, Statistic> BY_NAME=Maps.newHashMap();
 
     static{
-        for (Statistic stat:values())BY_NAME.put(stat.getName().toLowerCase(Locale.ENGLISH), stat);
+        for(final Statistic stat : values()){
+            BY_NAME.put(stat.getName()
+                            .toLowerCase(Locale.ENGLISH), stat);
+        }
     }
 
-    private String name;
-    private String friendlyName;
-    private String description;
-    private int defaultValue;
-
-    Statistic(String name, String friendlyName, String description){
+    Statistic(final String name,
+              final String friendlyName,
+              final String description){
         this.name=name;
         this.friendlyName=friendlyName;
         this.description=description;
     }
 
-    Statistic(String name, String friendlyName, String description, int defaultValue){
+    Statistic(final String name,
+              final String friendlyName,
+              final String description,
+              final int defaultValue){
         this.name=name;
         this.friendlyName=friendlyName;
         this.description=description;
         this.defaultValue=defaultValue;
     }
 
+    public static Statistic getStatistic(final String name){
+        return BY_NAME.get(name.toLowerCase(Locale.ENGLISH));
+    }
+
     public String getName(){
-        return name;
+        return this.name;
     }
 
     public String getFriendlyName(){
-        return friendlyName;
+        return this.friendlyName;
     }
 
     public String getDescription(){
-        return description;
+        return this.description;
     }
 
     public int getDefaultValue(){
-        return defaultValue;
+        return this.defaultValue;
     }
 
-    public static Statistic getStatistic(String name){
-        return BY_NAME.get(name.toLowerCase(Locale.ENGLISH));
-    }
+    private final String name;
+    private final String friendlyName;
+    private final String description;
+    private int defaultValue;
 
 }

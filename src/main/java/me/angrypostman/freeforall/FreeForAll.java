@@ -1,6 +1,16 @@
 package me.angrypostman.freeforall;
 
 import com.google.common.base.Charsets;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
 import me.angrypostman.freeforall.commands.*;
 import me.angrypostman.freeforall.data.DataStorage;
 import me.angrypostman.freeforall.data.MySQLStorage;
@@ -24,21 +34,9 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-
 public class FreeForAll extends JavaPlugin{
 
     private static FreeForAll plugin;
-
     private DataStorage dataStorage=null;
     private Configuration configuration=null;
     private Updater updater=null;
@@ -47,36 +45,35 @@ public class FreeForAll extends JavaPlugin{
 
     //We want every Runnable that we schedule to be logged
     //So we can later forcibly run them on shutdown
-    private List<BukkitRunnable> runnables=new CopyOnWriteArrayList<>();
+    private final List<BukkitRunnable> runnables=new CopyOnWriteArrayList<>();
 
-    public static FreeForAll getPlugin(){
-        return plugin;
-    }
-
-    public static void doAsync(Runnable runnable){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+    public static void doAsync(final Runnable runnable){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
             @Override
             public void run(){
                 try{
                     runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.getCause().printStackTrace();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    ex.printStackTrace();
                 }
             }
         };
         bukkitRunnable.runTaskAsynchronously(plugin);
     }
 
-    public static void doAsyncLater(Runnable runnable, long ticksLater){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+    public static void doAsyncLater(final Runnable runnable,
+                                    final long ticksLater){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
             @Override
             public void run(){
                 try{
                     runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.getCause().printStackTrace();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    ex.printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
@@ -86,47 +83,41 @@ public class FreeForAll extends JavaPlugin{
         bukkitRunnable.runTaskLaterAsynchronously(plugin, ticksLater);
     }
 
-    public static void doAsyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
-            @Override
-            public void run(){
-                try{
-                    runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    plugin.cancelTask(this.getTaskId());
-                    ex.getCause().printStackTrace();
-                }
-            }
-        };
-        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
-        bukkitRunnable.runTaskTimerAsynchronously(plugin, startAfterTicks, repeatDelayTicks);
+    public static FreeForAll getPlugin(){
+        return plugin;
     }
 
-    public static void doSync(Runnable runnable){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+    public void cancelTask(final int taskId){
+        this.runnables.removeIf(runnable->runnable.getTaskId()==taskId);
+    }
+
+    public static void doSync(final Runnable runnable){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
             @Override
             public void run(){
                 try{
                     runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.getCause().printStackTrace();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    ex.printStackTrace();
                 }
             }
         };
         bukkitRunnable.runTask(plugin);
     }
 
-    public static void doSyncLater(Runnable runnable, long ticksLater){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+    public static void doSyncLater(final Runnable runnable,
+                                   final long ticksLater){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
             @Override
             public void run(){
                 try{
                     runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    ex.getCause().printStackTrace();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    ex.printStackTrace();
                 }
                 //Make sure that the task gets cancelled no matter what
                 plugin.cancelTask(this.getTaskId());
@@ -136,25 +127,39 @@ public class FreeForAll extends JavaPlugin{
         bukkitRunnable.runTaskLater(plugin, ticksLater);
     }
 
-    public static void doSyncRepeating(Runnable runnable, long startAfterTicks, long repeatDelayTicks){
-        BukkitRunnable bukkitRunnable=new BukkitRunnable(){
-            @Override
-            public void run(){
-                try{
-                    runnable.run();
-                } catch(Throwable ex){
-                    plugin.getLogger().info("Task #" + getTaskId() + " generated an uncaught exception");
-                    plugin.cancelTask(this.getTaskId());
-                    ex.getCause().printStackTrace();
-                }
-            }
-        };
-        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
-        bukkitRunnable.runTaskTimer(plugin, startAfterTicks, repeatDelayTicks);
+    public DataStorage getDataStorage(){
+        return this.dataStorage;
     }
 
-    public DataStorage getDataStorage(){
-        return dataStorage;
+    @Override
+    public void onDisable(){
+        getLogger().info("Performing plugin shutdown procedure...");
+
+        if(this.dataStorage!=null){ this.dataStorage.close(); }
+        if(this.configuration!=null){ this.configuration.unload(); }
+
+        this.runnables.forEach(runnable->{
+
+        });
+
+        //Cancel all tasks
+        getServer().getScheduler()
+                   .cancelTasks(this);
+
+        getLogger().info("Un-registering event listeners...");
+        HandlerList.unregisterAll(this);
+
+        this.runnables.clear();
+
+        this.chat=null;
+        this.updater=null;
+        this.configuration=null;
+        this.dataStorage=null;
+        this.isVault=false;
+
+        FreeForAll.plugin=null;
+
+        getLogger().info("Plugin shutdown procedure complete!");
     }
 
     @Override
@@ -172,63 +177,67 @@ public class FreeForAll extends JavaPlugin{
 
         getLogger().info("Validating configuration file...");
         try{
-            YamlConfiguration config=new YamlConfiguration();
+            final YamlConfiguration config=new YamlConfiguration();
             config.load(new BufferedReader(new InputStreamReader(getResource("config.yml"), Charsets.UTF_8)));
             syncConfig(config, getConfig());
             saveConfig();
-        } catch(Exception e){
+        }catch(final Exception e){
             getLogger().log(Level.WARNING, "Failed to validate configuration file.", e);
         }
 
         getLogger().info("Loading configuration values...");
-        configuration=new Configuration(this);
-        configuration.load();
+        this.configuration=new Configuration(this);
+        this.configuration.load();
 
         Message.load(getConfig());
 
-        isVault=configuration.isChatFormatting() && getServer().getPluginManager().getPlugin("Vault") != null;
-        if(isVault){
-            RegisteredServiceProvider<Chat> provider=getServer().getServicesManager().getRegistration(Chat.class);
-            if(provider.getProvider() == null){
-                getLogger().info("Vault was found but failed to get service provider for " + Chat.class);
-                isVault=false;
-            } else{
-                chat=provider.getProvider();
+        this.isVault=this.configuration.isChatFormatting()&&getServer().getPluginManager()
+                                                                       .getPlugin("Vault")!=null;
+        if(this.isVault){
+            final RegisteredServiceProvider<Chat> provider=getServer().getServicesManager()
+                                                                      .getRegistration(Chat.class);
+            if(provider.getProvider()==null){
+                getLogger().info("Vault was found but failed to get service provider for "+Chat.class);
+                this.isVault=false;
+            }else{
+                this.chat=provider.getProvider();
                 getLogger().info("Successfully hooked into Vault");
             }
         }
 
-        String storageMethod=configuration.getStorageMethod();
+        final String storageMethod=this.configuration.getStorageMethod();
         if(storageMethod.equalsIgnoreCase("mysql")){
             getLogger().info("This plugin is setup using the MYSQL storage method, retrieving MySQL details...");
-            String host=configuration.getSQLHost();
-            String database=configuration.getSQLDatabase();
-            String username=configuration.getSQLUser();
-            String password=configuration.getSQLPassword();
-            Integer port=configuration.getSQLPort();
+            final String host=this.configuration.getSQLHost();
+            final String database=this.configuration.getSQLDatabase();
+            final String username=this.configuration.getSQLUser();
+            final String password=this.configuration.getSQLPassword();
+            final Integer port=this.configuration.getSQLPort();
 
-            if(host.isEmpty() || database.isEmpty() || username.isEmpty() || port == 0){
+            if(host.isEmpty()||database.isEmpty()||username.isEmpty()||port==0){
                 getLogger().info("MySQL details improperly configured.");
                 getPluginLoader().disablePlugin(this);
                 return;
-            } else if(username.equals("root")){ //So many people use "root" for accessing their database... plsno
+            }else if(username.equals("root")){ //So many people use "root" for accessing their database... plsno
                 getLogger().info("Please refrain from using the root account to access your databases.");
             }
 
-            dataStorage=new MySQLStorage(this, host, database, username, password, port);
-        } else if(storageMethod.equalsIgnoreCase("sqlite")){
-            getLogger().info("This plugin is setup using the SQLITE storage method (flat file), retrieving SQLITE data file...");
-            File file=configuration.getSQLiteDataFile();
-            dataStorage=new SQLiteStorage(this, file);
-        } else{
-            getLogger().info("Unknown storage method \"" + storageMethod + "\".");
+            this.dataStorage=new MySQLStorage(this, host, database, username, password, port);
+        }else if(storageMethod.equalsIgnoreCase("sqlite")){
+            getLogger().info(
+                    "This plugin is setup using the SQLITE storage method (flat file), retrieving SQLITE data file...");
+            final File file=this.configuration.getSQLiteDataFile();
+            this.dataStorage=new SQLiteStorage(this, file);
+        }else{
+            getLogger().info("Unknown storage method \""+storageMethod+"\".");
             getLogger().info("Valid storage methods include: mysql and sqlite");
-            getServer().getPluginManager().disablePlugin(this);
+            getServer().getPluginManager()
+                       .disablePlugin(this);
             return;
         }
 
         getLogger().info("Initializing plugin data storage...");
-        if(!dataStorage.initialize()){
+        if(!this.dataStorage.initialize()){
             getLogger().info("Failed to initialize plugin data storage, please check the logs for further details.");
             getPluginLoader().disablePlugin(this);
             return;
@@ -236,28 +245,32 @@ public class FreeForAll extends JavaPlugin{
 
         getLogger().info("Loading kits...");
         KitManager.loadKits();
-        getLogger().info("Loaded " + KitManager.getKits().size() + " kits!");
+        getLogger().info("Loaded "+KitManager.getKits()
+                                             .size()+" kits!");
 
-        int online=getServer().getOnlinePlayers().size();
-        if(online > 0){
-            getLogger().info("Server reload detected, please refrain from doing this in the future as this can " + "massively impair server performance.");
-            getLogger().info("Attempting to load user data of " + online + " players, this may take a while...");
+        final int online=getServer().getOnlinePlayers()
+                                    .size();
+        if(online>0){
+            getLogger().info(
+                    "Server reload detected, please refrain from doing this in the future as this can "+"massively impair server performance.");
+            getLogger().info("Attempting to load user data of "+online+" players, this may take a while...");
 
-            for(Player player : getServer().getOnlinePlayers()){
-                UUID uniqueId=player.getUniqueId();
-                Optional<User> optional=dataStorage.loadUser(uniqueId);
+            for(final Player player : getServer().getOnlinePlayers()){
+                final UUID uniqueId=player.getUniqueId();
+                Optional<User> optional=this.dataStorage.loadUser(uniqueId);
 
                 if(!optional.isPresent()){ //Should always be false
-                    optional=dataStorage.createUser(uniqueId, player.getName());
+                    optional=this.dataStorage.createUser(uniqueId, player.getName());
                     if(!optional.isPresent()){
-                        getLogger().info("Failed to generate user data for '" + player.getName() + "'!");
-                        player.kickPlayer(ChatColor.RED + "Failed to generate player data, please relog.");
+                        getLogger().info("Failed to generate user data for '"+player.getName()+"'!");
+                        player.kickPlayer(ChatColor.RED+"Failed to generate player data, please relog.");
                         continue;
                     }
                 }
 
-                User user=optional.get();
-                if(!user.getName().equals(player.getName())){
+                final User user=optional.get();
+                if(!user.getName()
+                        .equals(player.getName())){
                     user.setName(player.getName());
                 }
 
@@ -266,13 +279,13 @@ public class FreeForAll extends JavaPlugin{
 
             //In the event that some peoples player data failed to load we only show the amount
             //that actually got loaded
-            getLogger().info("Loaded data of " + UserCache.getUsers().size() + "/" + online + " players.");
-
+            getLogger().info("Loaded data of "+UserCache.getUsers()
+                                                        .size()+"/"+online+" players.");
         }
 
         getLogger().info("Registering event listeners...");
 
-        PluginManager manager=getServer().getPluginManager();
+        final PluginManager manager=getServer().getPluginManager();
         manager.registerEvents(new EntityDamageListener(this), this);
         manager.registerEvents(new PlayerDeathListener(this), this);
         manager.registerEvents(new PlayerLoginListener(this), this);
@@ -300,113 +313,125 @@ public class FreeForAll extends JavaPlugin{
         getLogger().info("Commands registered!");
 
         getLogger().info("Starting cache cleaner...");
-        doSyncRepeating(() -> {
+        doSyncRepeating(()->{
 
             int cleanupCount=0;
 
-            for(User user : UserCache.getUsers()){
-                Player player=user.getBukkitPlayer();
-                long downloadTime=user.getDownloadTime();
-                if(player == null || !player.isOnline()){
-                    if(System.currentTimeMillis() - downloadTime >= TimeUnit.MINUTES.toMillis(10)){
+            for(final User user : UserCache.getUsers()){
+                final Player player=user.getBukkitPlayer();
+                final long downloadTime=user.getDownloadTime();
+                if(player==null||!player.isOnline()){
+                    if(System.currentTimeMillis()-downloadTime>=TimeUnit.MINUTES.toMillis(10)){
                         UserCache.expireUser(user);
                         cleanupCount++;
                     }
                 }
             }
 
-            if(cleanupCount > 0){
-                getLogger().info("Cleaned up " + cleanupCount + " users from memory.");
+            if(cleanupCount>0){
+                getLogger().info("Cleaned up "+cleanupCount+" users from memory.");
             }
-
-        }, 60 * 10 * 20, 60 * 10 * 20); //Every 10 minutes repeat this task
+        }, 60*10*20, 60*10*20); //Every 10 minutes repeat this task
 
         getLogger().info("Updating saved version string in config to current version...");
-        configuration.set("version", getDescription().getVersion());
-        configuration.saveConfiguration();
+        this.configuration.set("version", getDescription().getVersion());
+        this.configuration.saveConfiguration();
 
         getLogger().info("Plugin startup procedure complete!");
-        updater=new Updater(this);
-        doAsyncRepeating(() -> {
+        this.updater=new Updater(this);
+        doAsyncRepeating(()->{
 
-            plugin.getLogger().info("Checking for available updates...");
+            plugin.getLogger()
+                  .info("Checking for available updates...");
             try{
-                PluginDescriptionFile description=plugin.getDescription();
-                updater.checkUpdate(description.getVersion());
-            } catch(IOException ex){
-                plugin.getLogger().info("An error occurred whilst checking for updates.");
-                plugin.getLogger().info("Message: " + ex.getMessage());
-
+                final PluginDescriptionFile description=plugin.getDescription();
+                this.updater.checkUpdate(description.getVersion());
+            }catch(final IOException ex){
+                plugin.getLogger()
+                      .info("An error occurred whilst checking for updates.");
+                plugin.getLogger()
+                      .info("Message: "+ex.getMessage());
             }
 
-            String latestVersion=updater.getLatestVersion();
-            String latestVersionURL=updater.getLatestVersionURL();
-            if(latestVersion != null){
-                plugin.getLogger().info("A new version of FreeForAll is available for download (v" + latestVersion + ")!");
-                plugin.getLogger().info("Download it now at: " + latestVersionURL);
-            } else{
-                plugin.getLogger().info("FreeForAll is currently up to date (running v" + configuration.getVersion() + ")");
+            final String latestVersion=this.updater.getLatestVersion();
+            final String latestVersionURL=this.updater.getLatestVersionURL();
+            if(latestVersion!=null){
+                plugin.getLogger()
+                      .info("A new version of FreeForAll is available for download (v"+latestVersion+")!");
+                plugin.getLogger()
+                      .info("Download it now at: "+latestVersionURL);
+            }else{
+                plugin.getLogger()
+                      .info("FreeForAll is currently up to date (running v"+this.configuration.getVersion()+")");
             }
-        }, 0L, 60 * 60 * 6 * 20);
-
+        }, 0L, 60*60*6*20);
     }
 
-    @Override
-    public void onDisable(){
-        getLogger().info("Performing plugin shutdown procedure...");
+    public static void doAsyncRepeating(final Runnable runnable,
+                                        final long startAfterTicks,
+                                        final long repeatDelayTicks){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+            @Override
+            public void run(){
+                try{
+                    runnable.run();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    plugin.cancelTask(this.getTaskId());
+                    ex.printStackTrace();
+                }
+            }
+        };
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
+        bukkitRunnable.runTaskTimerAsynchronously(plugin, startAfterTicks, repeatDelayTicks);
+    }
 
-        if(this.dataStorage != null) this.dataStorage.close();
-        if(this.configuration != null) this.configuration.unload();
+    public static void doSyncRepeating(final Runnable runnable,
+                                       final long startAfterTicks,
+                                       final long repeatDelayTicks){
+        final BukkitRunnable bukkitRunnable=new BukkitRunnable(){
+            @Override
+            public void run(){
+                try{
+                    runnable.run();
+                }catch(final Throwable ex){
+                    plugin.getLogger()
+                          .info("Task #"+getTaskId()+" generated an uncaught exception");
+                    plugin.cancelTask(this.getTaskId());
+                    ex.printStackTrace();
+                }
+            }
+        };
+        FreeForAll.getPlugin().runnables.add(bukkitRunnable);
+        bukkitRunnable.runTaskTimer(plugin, startAfterTicks, repeatDelayTicks);
+    }
 
-        this.runnables.forEach(runnable->{
-
-        });
-
-        //Cancel all tasks
-        getServer().getScheduler().cancelTasks(this);
-
-        getLogger().info("Un-registering event listeners...");
-        HandlerList.unregisterAll(this);
-
-        this.runnables.clear();
-
-        this.chat=null;
-        this.updater=null;
-        this.configuration=null;
-        this.dataStorage=null;
-        this.isVault=false;
-
-        FreeForAll.plugin=null;
-
-        getLogger().info("Plugin shutdown procedure complete!");
-
+    private void syncConfig(final ConfigurationSection from,
+                            final ConfigurationSection to){
+        from.getKeys(true)
+            .stream()
+            .filter(fromKey->!to.isSet(fromKey))
+            .forEachOrdered(fromKey->to.set(fromKey, from.get(fromKey)));
     }
 
     public String getVersion(){
-        return configuration.getVersion();
+        return this.configuration.getVersion();
     }
 
     public Configuration getConfiguration(){
-        return configuration;
-    }
-
-    public void cancelTask(int taskId){
-        this.runnables.removeIf(runnable->runnable.getTaskId()==taskId);
+        return this.configuration;
     }
 
     public Updater getUpdater(){
-        return updater;
+        return this.updater;
     }
 
     public boolean hasVault(){
-        return isVault;
+        return this.isVault;
     }
 
     public Chat getChatManager(){
-        return chat;
-    }
-
-    private void syncConfig(ConfigurationSection from, ConfigurationSection to){
-        from.getKeys(true).stream().filter(fromKey -> !to.isSet(fromKey)).forEachOrdered(fromKey -> to.set(fromKey, from.get(fromKey)));
+        return this.chat;
     }
 }
